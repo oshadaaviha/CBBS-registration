@@ -7,7 +7,7 @@
     <div data-simplebar class="h-100">
 
         <!--- Sidemenu -->
-        <div id="sidebar-menu">
+        <div id="sidebar-menu" >
 
             <br>
             <!-- Left Menu Start -->
@@ -65,12 +65,12 @@
                 <li>
                     <a href="{{url('/dataImportPage')}}" class="waves-effect bx-fade-right-hover">
                         <i class="bx bx-download"></i>
-                        <span key="t-dashboards">Data Import</span>
+                        <span key="t-dashboards">Student Registration Form</span>
 
                     </a>
                 </li>
 
-                <li>
+                {{-- <li>
                     <a href="{{url('/filterStudentDetails')}}" class="waves-effect bx-fade-right-hover">
                         <i class="bx bx bxs-user"></i>
                         <span key="t-dashboards">Registered Students</span>
@@ -91,7 +91,7 @@
                         <i class="bx bx bxs-user"></i>
                         <span key="t-dashboards">Certifired Students</span>
 
-                    </a>
+                    </a> --}}
                 </li>
 
 

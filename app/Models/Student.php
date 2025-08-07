@@ -9,20 +9,23 @@ class Student extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+     protected $fillable = [
         'student_id',
         'name',
-        'nic',
-        'email',
+        'citizenship',
+        'nic_number',
+        'certificate_name',
         'gender',
-        'contact_number',
-        'whatsapp_number',
-        'address',
-        'branch_id',
+        'contact_address',
+        'permanent_address',
+        'email',
+        'mobile',
+        'whatsapp',
         'course_id',
+        'branch_id',
         'batch_id',
         'status',
+        'isFastTrack',
         'isActive',
-        'isFastTack'
     ];
 }

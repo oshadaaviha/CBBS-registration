@@ -40,7 +40,7 @@ Route::get('/editProfileView{id}',[UserController::class,'EditProfileView']);
 Route::post('/editProfile',[UserController::class,'EditProfile']);
 Route::post('/resetPassword',[UserController::class,'ResetPassword']);
 Route::get('/disableUser{id}',[UserController::class,'DisableUser']);
-
+Route::post('/students/store', [DataImportController::class, 'storeStudent'])->name('students.store');
 //Branch
 Route::get('/branchManagement',[BranchController::class,'BranchManagement']);
 Route::post('/addBranch',[BranchController::class,'AddBranch']);
