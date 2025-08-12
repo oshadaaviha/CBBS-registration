@@ -16,46 +16,46 @@ use Illuminate\Support\Facades\Storage;
 class DataImportController extends Controller
 {
 
-    public function storeStudent(Request $request)
-    {
-        $request->validate([
-            'student_id' => 'required|string',
-            'name' => 'required|string',
-            'citizenship' => 'required|string',
-            'nic_number' => 'required|string',
-            'certificate_name' => 'required|string',
-            'gender' => 'required|string',
-            'contact_address' => 'nullable|string',
-            'permanent_address' => 'nullable|string',
-            'email' => 'nullable|email',
-            'mobile' => 'nullable|string',
-            'whatsapp' => 'nullable|string',
-            'course_id' => 'required|integer',
-            'branch_id' => 'required|integer',
-            'batch_id' => 'required|integer',
-        ]);
+    // public function storeStudent(Request $request)
+    // {
+    //     $request->validate([
+    //         'student_id' => 'required|string',
+    //         'name' => 'required|string',
+    //         'citizenship' => 'required|string',
+    //         'nic_number' => 'required|string',
+    //         'certificate_name' => 'required|string',
+    //         'gender' => 'required|string',
+    //         'contact_address' => 'nullable|string',
+    //         'permanent_address' => 'nullable|string',
+    //         'email' => 'nullable|email',
+    //         'mobile' => 'nullable|string',
+    //         'whatsapp' => 'nullable|string',
+    //         'course_id' => 'required|integer',
+    //         'branch_id' => 'required|integer',
+    //         'batch_id' => 'required|integer',
+    //     ]);
 
-        Student::create([
-            'student_id' => $request->student_id,
-            'name' => $request->name,
-            'citizenship' => $request->citizenship,
-            'nic_number' => $request->nic_number,
-            'certificate_name' => $request->certificate_name,
-            'gender' => $request->gender,
-            'contact_address' => $request->contact_address,
-            'permanent_address' => $request->permanent_address,
-            'email' => $request->email,
-            'mobile' => $request->mobile,
-            'whatsapp' => $request->whatsapp,
-            'course_id' => $request->course_id,
-            'branch_id' => $request->branch_id,
-            'batch_id' => $request->batch_id,
-            'status' => 'registered',
-            'isActive' => 1,
-        ]);
+    //     Student::create([
+    //         'student_id' => $request->student_id,
+    //         'name' => $request->name,
+    //         'citizenship' => $request->citizenship,
+    //         'nic_number' => $request->nic_number,
+    //         'certificate_name' => $request->certificate_name,
+    //         'gender' => $request->gender,
+    //         'contact_address' => $request->contact_address,
+    //         'permanent_address' => $request->permanent_address,
+    //         'email' => $request->email,
+    //         'mobile' => $request->mobile,
+    //         'whatsapp' => $request->whatsapp,
+    //         'course_id' => $request->course_id,
+    //         'branch_id' => $request->branch_id,
+    //         'batch_id' => $request->batch_id,
+    //         'status' => 'registered',
+    //         'isActive' => 1,
+    //     ]);
 
-        return redirect()->back()->with('message', 'Student added successfully.');
-    }
+    //     return redirect()->back()->with('message', 'Student added successfully.');
+    // }
 
     //
     public function DataImportPage()

@@ -62,7 +62,7 @@
                             </div>
                             <!-- end page title -->
 
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="col-md-3">
                                     <button class="btn btn-primary waves-effect waves-light" data-bs-toggle="modal"
                                         data-bs-target="#customerAddModal">Add Student</button>
@@ -70,7 +70,7 @@
 
                                 </div>
 
-                            </div>
+                            </div> --}}
 
                             <br>
                             @if (session()->has('message'))
@@ -139,7 +139,7 @@
                                                                 <td>{{ $item->mobile }}</td>
                                                                 <td>{{ $item->whatsapp }}</td>
                                                                 <td>{{ $item->contact_address }}</td>
-                                                                <td>{{ $item->batch_id }}</td>
+                                                                <td>{{ $item->batch_no }}</td>
                                                                 <td>{{ $item->isFastTrack }}</td>
                                                                 <td>
                                                                     <button
@@ -154,7 +154,8 @@
                                                                         data-contactnumber="{{ $item->mobile }}"
                                                                         data-whatsappnumber="{{ $item->whatsapp }}"
                                                                         data-address="{{ $item->contact_address }}"
-                                                                        data-batchid="{{ $item->batch_id }}">Edit</button>
+                                                                        data-batchid="{{ $item->batch_id }}"
+                                                                        >Edit</button>
                                                                     <a href="{{ url('/deleteStudent/' . $item->id) }}"
                                                                         class="btn btn-outline-danger btn-sm waves-effect waves-light"
                                                                         onclick="return confirm('Are you sure you want to delete this student?')">Delete</a>
@@ -315,6 +316,15 @@
                                         </div>
 
                                     </form>
+                                    @if ($errors->any())
+  <div class="alert alert-danger">
+    <ul class="mb-0">
+      @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+      @endforeach
+    </ul>
+  </div>
+@endif
                                 </div>
                             </div>
                         </div>

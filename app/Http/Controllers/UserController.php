@@ -88,7 +88,7 @@ class UserController extends Controller
             'email' => 'required|email|max:255|unique:users,email',
             'contact' => 'required|digits:10',
             'password' => 'required|string|min:5',
-            'role' => 'required|string|in:Admin,Data_Entry_Operator',
+            'role' => 'required|string|in:Admin,Sales,Manager',
         ]);
 
         $user = new User;
