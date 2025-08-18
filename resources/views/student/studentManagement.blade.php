@@ -124,15 +124,16 @@
                                                             <th>Whatsapp</th>
                                                             <th>Contact Address</th>
                                                             <th>Batch ID</th>
-                                                            <th>Is Fast Track</th>
+                                                            {{-- <th>Is Fast Track</th> --}}
                                                             <th>Action</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         @foreach ($data as $item)
+                                                         @if (!empty($item->student_id) && !empty($item->batch_id))
                                                             <tr>
                                                                 <td>{{ $item->student_id }}</td>
-                                                                <td>{{ $item->name }}</td>
+                                                                <td>{{ $item->first_name }} {{ $item->last_name }}</td>
                                                                 <td>{{ $item->nic_number }}</td>
                                                                 <td>{{ $item->email }}</td>
                                                                 <td>{{ $item->gender }}</td>
@@ -140,14 +141,15 @@
                                                                 <td>{{ $item->whatsapp }}</td>
                                                                 <td>{{ $item->contact_address }}</td>
                                                                 <td>{{ $item->batch_no }}</td>
-                                                                <td>{{ $item->isFastTrack }}</td>
+                                                                {{-- <td>{{ $item->isFastTrack }}</td> --}}
                                                                 <td>
                                                                     <button
                                                                         class="btn btn-outline-info btn-sm waves-effect waves-light"
                                                                         data-bs-toggle="modal"
                                                                         data-bs-target="#studentEditModal"
                                                                         data-studentid="{{ $item->student_id }}"
-                                                                        data-name="{{ $item->name }}"
+                                                                        data-firstname="{{ $item->first_name }}"
+                                                                        data-lastname="{{ $item->last_name }}"
                                                                         data-nic="{{ $item->nic_number }}"
                                                                         data-email="{{ $item->email }}"
                                                                         data-gender="{{ $item->gender }}"
@@ -161,6 +163,7 @@
                                                                         onclick="return confirm('Are you sure you want to delete this student?')">Delete</a>
                                                                 </td>
                                                             </tr>
+                                                        @endif
                                                         @endforeach
                                                     </tbody>
                                                 </table>
@@ -357,8 +360,8 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label for="name" class="form-label">Student Name</label>
-                                            <input type="text" class="form-control" id="edit_name" name="name"
+                                            <label for="first_name" class="form-label">First Name</label>
+                                            <input type="text" class="form-control" id="edit_first_name" name="first_name"
                                                 required>
                                             <span class="error text-danger small" id="edit_name_error"></span>
                                         </div>
@@ -529,7 +532,8 @@
                     // Error messages
                     const errors = {
                         student_id: 'Student ID is required and must follow the format: Letters/Letters/Numbers/Numbers.',
-                        name: 'Name is required.',
+                        fname: 'First Name is required.',
+                        lname: 'Last Name is required.',
                         nic: 'NIC or Passport number is required in the correct format.',
                         email: 'Valid email is required.',
                         gender: 'Please select a gender.',

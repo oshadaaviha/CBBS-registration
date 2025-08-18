@@ -59,23 +59,33 @@ class DataImportController extends Controller
 
     //
     public function DataImportPage()
-    {
+{
+    try {
+        $course = Course::where('isActive', 1)->get();
+        $branch = Branch::where('isActive', 1)->get();
+        $batch  = Batch::where('isActive', 1)->get();
 
-        try {
+        // Get students missing student_id or batch_id (null or empty string)
+        $data = Student::leftJoin('branches', 'students.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('courses', 'students.course_id', '=', 'courses.course_id')
+            ->leftJoin('batches', 'students.batch_id', '=', 'batches.batch_id')
+            ->select('students.*', 'branches.branch_name', 'courses.course_name', 'batches.batch_no')
+            ->where('students.isActive', 1)
+            ->where(function ($q) {
+                $q->whereNull('students.student_id')
+                  ->orWhere('students.student_id', '')
+                  ->orWhereNull('students.batch_id')
+                  ->orWhere('students.batch_id', '');
+            })
+            ->get();
 
-            $course = Course::where('isActive', 1)->get();
-
-            $branch = Branch::where('isActive', 1)->get();
-
-            $batch = Batch::where('isActive', 1)->get();
-
-
-            return view('data-import.dataImport', compact('course', 'branch', 'batch'));
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
-        }
+        return view('data-import.dataImport', compact('course', 'branch', 'batch', 'data'));
+    } catch (Exception $e) {
+        app(ErrorLogController::class)->ShowError($e);
+        return redirect()->back()->with('error', 'Something went wrong. Please try again');
     }
+}
+
 
 
 
@@ -110,7 +120,7 @@ class DataImportController extends Controller
             }
 
             // Define expected header fields
-            $expectedHeader = ['student_id', 'name', 'nic', 'email', 'gender', 'contact_number', 'whatsapp_number', 'address', 'isFastTrack'];
+            $expectedHeader = ['student_id', 'first_name','last_name' ,'nic', 'email', 'gender', 'contact_number', 'whatsapp_number', 'address', 'isFastTrack'];
 
             if ($header !== $expectedHeader) {
                 return redirect()->back()->with('error', 'CSV header fields do not match the expected format.');
@@ -133,17 +143,18 @@ class DataImportController extends Controller
                 try {
                     DB::table('students')->insert([
                         'student_id' => $row[0],
-                        'name' => $row[1],
-                        'nic' => $row[2],
-                        'email' => $row[3],
-                        'gender' => $row[4],
-                        'contact_number' => $row[5],
-                        'whatsapp_number' => $row[6],
-                        'address' => $row[7],
+                        'first_name' => $row[1],
+                        'last_name' => $row[2],
+                        'nic' => $row[3],
+                        'email' => $row[4],
+                        'gender' => $row[5],
+                        'contact_number' => $row[6],
+                        'whatsapp_number' => $row[7],
+                        'address' => $row[8],
                         'branch_id' => $request->branch_id,
                         'course_id' => $request->course_id,
                         'batch_id' => $request->batch_id,
-                        'isFastTrack' => $row[8],
+                        'isFastTrack' => $row[9],
                         'status' => 'registered',
                         'isActive' => 1,
                         'created_at' => now(),

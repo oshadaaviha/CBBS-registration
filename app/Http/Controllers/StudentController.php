@@ -19,45 +19,70 @@ class StudentController extends Controller
 {
 
     public function storeStudent(Request $request)
-{
-    $request->validate([
-        'student_id' => 'required|string',
-        'name' => 'required|string',
-        'citizenship' => 'required|string',
-        'nic_number' => 'required|string',
-        'certificate_name' => 'required|string',
-        'gender' => 'required|string',
-        'contact_address' => 'nullable|string',
-        'permanent_address' => 'nullable|string',
-        'email' => 'nullable|email',
-        'mobile' => 'nullable|string',
-        'whatsapp' => 'nullable|string',
-        'course_id' => 'nullable|string',
-        'branch_id' => 'nullable|string',
-        'batch_id' => 'nullable|string',
-    ]);
+    {
+        $request->validate([
+            'student_id'        => 'nullable|string',
+            // accept either hidden `name` or first/last; we’ll build a final name below
+            // 'name'              => 'nullable|string',
+            'first_name'        => 'nullable|string',
+            'last_name'         => 'nullable|string',
 
-    \App\Models\Student::create([
-        'student_id' => $request->student_id,
-        'name' => $request->name,
-        'citizenship' => $request->citizenship,
-        'nic_number' => $request->nic_number,
-        'certificate_name' => $request->certificate_name,
-        'gender' => $request->gender,
-        'contact_address' => $request->contact_address,
-        'permanent_address' => $request->permanent_address,
-        'email' => $request->email,
-        'mobile' => $request->mobile,
-        'whatsapp' => $request->whatsapp,
-        'course_id' => $request->course_id,
-        'branch_id' => $request->branch_id,
-        'batch_id' => $request->batch_id,
-        'status' => 'registered',
-        'isActive' => 1,
-    ]);
+            'citizenship'       => 'required|string',
+            'nic_number'        => 'required|string',
+            'certificate_name'  => 'required|string',
+            'gender'            => 'required|string',
+            'contact_address'   => 'nullable|string',
+            'permanent_address' => 'nullable|string',
+            'email'             => 'nullable|email',
+            'mobile'            => 'nullable|string',
+            'whatsapp'          => 'nullable|string',
 
-    return redirect()->back()->with('message', 'Student added successfully.');
-}
+            // accept array or single value for course(s)
+            'course_id'         => 'nullable',
+            'course_id.*'       => 'nullable|exists:courses,course_id',
+
+            'branch_id'         => 'nullable|exists:branches,branch_id',
+            'batch_id'          => 'nullable|exists:batches,batch_id',
+        ]);
+
+        // Build full name even if JS didn't set the hidden input
+        $fullName = $request->input('name');
+        if (!$fullName) {
+            $first = trim((string)$request->input('first_name', ''));
+            $last  = trim((string)$request->input('last_name', ''));
+            $fullName = trim($first . ' ' . $last);
+        }
+
+        // If your DB has a single `course_id` column, pick the first selected
+        $courseId = $request->input('course_id');
+        if (is_array($courseId)) {
+            $courseId = $courseId[0] ?? null;   // QUICK FIX: store first selection
+            // If you want true many-to-many later, move to a pivot table and store all.
+        }
+
+        Student::create([
+            'student_id'        => $request->student_id,     // nullable OK
+            'first_name'              => $request->first_name,
+            'last_name'              => $request->last_name,
+            'citizenship'       => $request->citizenship,
+            'nic_number'        => $request->nic_number,
+            'certificate_name'  => $request->certificate_name,
+            'gender'            => $request->gender,
+            'contact_address'   => $request->contact_address,
+            'permanent_address' => $request->permanent_address,
+            'email'             => $request->email,
+            'mobile'            => $request->mobile,
+            'whatsapp'          => $request->whatsapp,
+            'course_id'         => $courseId,                // single value saved
+            'branch_id'         => $request->branch_id,
+            'batch_id'          => $request->batch_id,
+            'status'            => 'registered',
+            'isActive'          => 1,
+        ]);
+
+        return back()->with('success', 'Registration saved successfully!');
+    }
+
 
     public function studentManagement()
     {
@@ -80,54 +105,88 @@ class StudentController extends Controller
         return view('student.studentManagement', compact('data', 'branch', 'course', 'batch'));
     }
 
+    public function updateIds(Request $request)
+    {
+        $validated = $request->validate([
+            'record_id'  => 'required|integer|exists:students,id',
+            'student_id' => 'required|string|max:255|unique:students,student_id,' . $request->record_id,
+            'batch_id'   => 'required|exists:batches,batch_id',
+            // optional if you let them change others from the same form:
+            'first_name'               => 'nullable|string|max:255',
+            'last_name'             => 'nullable|string|max:255',
+            'nic_number'         => 'nullable|string|max:20',
+            'email'              => 'nullable|email',
+            'gender'             => 'nullable|string|max:20',
+            'mobile'             => 'nullable|string|max:20',
+            'whatsapp'           => 'nullable|string|max:20',
+            'contact_address'    => 'nullable|string|max:500',
+            'branch_id'          => 'nullable|exists:branches,branch_id',
+            'course_id'          => 'nullable', // array if you use multi-course
+        ]);
+
+        $update = [
+            'student_id'      => $validated['student_id'],
+            'batch_id'        => $validated['batch_id'],
+        ];
+
+        // If you want to allow editing other fields from the same form:
+        foreach (['first_name', 'last_name', 'nic_number', 'email', 'gender', 'mobile', 'whatsapp', 'contact_address', 'branch_id'] as $f) {
+            if ($request->filled($f)) $update[$f] = $request->$f;
+        }
+        // If you kept single course_id:
+        if ($request->filled('course_id')) $update['course_id'] = $request->course_id;
+
+        \App\Models\Student::where('id', $validated['record_id'])->update($update);
+
+        return back()->with('success', 'Student updated successfully.');
+    }
+
+
 
     public function AddStudent(Request $request)
     {
-
         try {
-
             $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:users,email',
-                'nic' => 'required|string|max:12',
-                'contact_number' => 'required|digits:10',
-                'whatsapp_number' => 'required|digits:10',
-                'address' => 'required|string|max:255',
-                'branch_id' => 'required',
-                'course_id' => 'required',
-                'batch_id' => 'required',
-
+                'first_name'       => 'required|string|max:255',
+                'last_name'        => 'required|string|max:255',
+                'email'            => 'required|email|max:255|unique:students,email',
+                'nic_number'       => 'required|string|max:20',
+                'mobile'           => 'required|digits:10',
+                'whatsapp'         => 'required|digits:10',
+                'contact_address'  => 'required|string|max:255',
+                'branch_id'        => 'required',
+                'course_id'        => 'required',
+                'batch_id'         => 'required',
             ]);
 
-            $student_id = $request->student_id;
-
-            if (Student::where('student_id', '=', $student_id)->exists()) {
-                return redirect()->back()->with('error', 'Student ID Already Exists');
+            if (Student::where('student_id', $request->student_id)->exists()) {
+                return back()->with('error', 'Student ID Already Exists');
             }
 
-            $data = new Student();
+            Student::create([
+                'student_id'       => $request->student_id,
+                'first_name'       => $request->first_name,
+                'last_name'        => $request->last_name,
+                'nic_number'       => $request->nic_number,
+                'email'            => $request->email,
+                'gender'           => $request->gender,
+                'mobile'           => $request->mobile,
+                'whatsapp'         => $request->whatsapp,
+                'contact_address'  => $request->contact_address,
+                'branch_id'        => $request->branch_id,
+                'course_id'        => $request->course_id,
+                'batch_id'         => $request->batch_id,
+                'status'           => 'registered',
+                'isActive'         => 1,
+            ]);
 
-            $data->student_id = $student_id;
-            $data->name = $request->name;
-            $data->nic = $request->nic;
-            $data->email = $request->email;
-            $data->gender = $request->gender;
-            $data->contact_number = $request->contact_number;
-            $data->whatsapp_number = $request->whatsapp_number;
-            $data->address = $request->address;
-            $data->branch_id = $request->branch_id;
-            $data->course_id = $request->course_id;
-            $data->batch_id = $request->batch_id;
-
-            $data->isActive = 1;
-            $data->save();
-
-            return redirect()->back()->with('message', 'Student Added Successfully');
+            return back()->with('message', 'Student Added Successfully');
         } catch (Exception $e) {
             app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
+            return back()->with('error', 'Something went wrong. Please try again');
         }
     }
+
 
     // public function storeStudent(Request $request)
     // {
@@ -171,39 +230,45 @@ class StudentController extends Controller
     // }
     public function EditStudent(Request $request)
     {
-
         try {
-
-
-            if (Student::where('student_id', $request->student_id)
-                ->where('student_id', '!=', $request->student_id)
-                ->where('isActive', 1)
-                ->exists()
-            ) {
-                return redirect()->back()->with('error', 'Student Id Already Exists');
-            }
-
-            Student::where(['student_id' => $request->student_id])->update([
-                'name' => $request->name,
-                'nic' => $request->nic,
-                'email' => $request->email,
-                'gender' => $request->gender,
-                'contact_number' => $request->contact_number,
-                'whatsapp_number' => $request->whatsapp_number,
-                'address' => $request->address,
-                'branch_id' => $request->branch_id,
-                'course_id' => $request->course_id,
-                'batch_id' => $request->batch_id,
-
+            $request->validate([
+                'id'              => 'required|integer|exists:students,id',
+                'student_id'      => 'required|string|max:255|unique:students,student_id,' . $request->id,
+                'first_name'      => 'required|string|max:255',
+                'last_name'       => 'required|string|max:255',
+                'nic_number'      => 'required|string|max:20',
+                'email'           => 'nullable|email',
+                'gender'          => 'nullable|string|max:20',
+                'mobile'          => 'nullable|string|max:20',
+                'whatsapp'        => 'nullable|string|max:20',
+                'contact_address' => 'nullable|string|max:500',
+                'branch_id'       => 'nullable|exists:branches,branch_id',
+                'course_id'       => 'nullable',
+                'batch_id'        => 'nullable|exists:batches,batch_id',
             ]);
 
+            Student::where('id', $request->id)->update([
+                'student_id'      => $request->student_id,
+                'first_name'      => $request->first_name,
+                'last_name'       => $request->last_name,
+                'nic_number'      => $request->nic_number,
+                'email'           => $request->email,
+                'gender'          => $request->gender,
+                'mobile'          => $request->mobile,
+                'whatsapp'        => $request->whatsapp,
+                'contact_address' => $request->contact_address,
+                'branch_id'       => $request->branch_id,
+                'course_id'       => is_array($request->course_id) ? ($request->course_id[0] ?? null) : $request->course_id,
+                'batch_id'        => $request->batch_id,
+            ]);
 
-            return redirect()->back()->with('message', 'Student Edited Successfully');
+            return back()->with('message', 'Student Edited Successfully');
         } catch (Exception $e) {
             app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
+            return back()->with('error', 'Something went wrong. Please try again');
         }
     }
+
 
     public function DeleteStudent($id)
     {
@@ -281,6 +346,16 @@ class StudentController extends Controller
 
         // Return Blade view for non-AJAX requests
         return view('certificate.FilterStudentDetails', compact('students', 'courses', 'branches', 'batches'));
+    }
+
+    public function publicForm()
+    {
+        $course = Course::where('isActive', 1)->get();
+        $branch = Branch::where('isActive', 1)->get();
+        $batch = Batch::where('isActive', 1)->get();
+
+        // Return the same form but with certain fields hidden
+        return view('student.studentRegistrationPublic', compact('course', 'branch', 'batch'));
     }
 
 

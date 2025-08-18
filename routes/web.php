@@ -97,3 +97,5 @@ Route::post('/certifiedFilterStudents', [DataImportController::class, 'certified
 
 // Individual Student Details
 Route::get('/studentDetails', [StudentController::class, 'indStudentDetailsex'])->name('students.individual');
+Route::get('/student-registration-public', [StudentController::class, 'publicForm'])->name('students.publicForm');
+Route::post('/students/update-ids', [StudentController::class, 'updateIds'])->name('students.updateIds');

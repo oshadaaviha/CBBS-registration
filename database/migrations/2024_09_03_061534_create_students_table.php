@@ -17,7 +17,8 @@ class CreateStudentsTable extends Migration
             $table->id(); // Auto-increment primary key
 
             $table->string('student_id')->unique(); // Optional: Make this unique if needed
-            $table->string('name')->nullable();
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable(); // Last name
             $table->string('citizenship')->nullable();
             $table->string('nic_number')->nullable();
             $table->string('certificate_name')->nullable();
