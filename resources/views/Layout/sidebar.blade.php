@@ -70,15 +70,15 @@
                     </a>
                 </li>
 
-                {{-- <li>
-                    <a href="{{url('/filterStudentDetails')}}" class="waves-effect bx-fade-right-hover">
+                <li>
+                    <a href="{{url('/pendingStudents')}}" class="waves-effect bx-fade-right-hover">
                         <i class="bx bx bxs-user"></i>
-                        <span key="t-dashboards">Registered Students</span>
+                        <span key="t-dashboards">Pending Students</span>
 
                     </a>
                 </li>
 
-                <li>
+                {{-- <li>
                     <a href="{{url('/ongoingStudentDetails')}}" class="waves-effect bx-fade-right-hover">
                         <i class="bx bx bxs-user"></i>
                         <span key="t-dashboards">Ongoing Students</span>
@@ -91,8 +91,8 @@
                         <i class="bx bx bxs-user"></i>
                         <span key="t-dashboards">Certifired Students</span>
 
-                    </a> --}}
-                </li>
+                    </a>
+                </li> --}}
 
 
 
@@ -106,7 +106,6 @@
                     <a href="{{url('/userManagement')}}" class="waves-effect bx-fade-right-hover">
                         <i class="bx bx bxs-user"></i>
                         <span key="t-dashboards">User Management</span>
-
                     </a>
                 </li>
 

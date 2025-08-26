@@ -9,6 +9,8 @@ use App\Models\Student;
 use App\Models\Branch;
 use App\Models\Course;
 use App\Models\Batch;
+use App\Models\Enrollment;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,16 +19,12 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class StudentController extends Controller
 {
-
     public function storeStudent(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'student_id'        => 'nullable|string',
-            // accept either hidden `name` or first/last; we’ll build a final name below
-            // 'name'              => 'nullable|string',
             'first_name'        => 'nullable|string',
             'last_name'         => 'nullable|string',
-
             'citizenship'       => 'required|string',
             'nic_number'        => 'required|string',
             'certificate_name'  => 'required|string',
@@ -37,73 +35,243 @@ class StudentController extends Controller
             'mobile'            => 'nullable|string',
             'whatsapp'          => 'nullable|string',
 
-            // accept array or single value for course(s)
-            'course_id'         => 'nullable',
-            'course_id.*'       => 'nullable|exists:courses,course_id',
+            // global preferred_class (if you keep it)
+            'preferred_class'   => ['nullable', Rule::in([
+                'weekday class',
+                'weekend class',
+                'weekday or weekend class'
+            ])],
 
-            'branch_id'         => 'nullable|exists:branches,branch_id',
-            'batch_id'          => 'nullable|exists:batches,batch_id',
+            // per-course payload (from your Blade)
+            'courses'                       => ['required', 'array'],
+            'courses.*.selected'            => ['nullable', 'in:1'],
+            'courses.*.track'               => ['nullable', Rule::in(['Normal', 'Fast'])],
+            'courses.*.branch_id'           => ['nullable', 'string', 'exists:branches,branch_id'],
+            'courses.*.batch_id'            => ['nullable', 'string', 'exists:batches,batch_id'], // add per-course batch if needed
+            'courses.*.is_fast_track'       => ['nullable', 'boolean'],
+            'courses.*.status'              => ['nullable', 'string'], // optional per-enrollment status
         ]);
 
-        // Build full name even if JS didn't set the hidden input
-        $fullName = $request->input('name');
-        if (!$fullName) {
-            $first = trim((string)$request->input('first_name', ''));
-            $last  = trim((string)$request->input('last_name', ''));
-            $fullName = trim($first . ' ' . $last);
+        // Require at least one selected course
+        $selectedCourses = collect($request->input('courses', []))
+            ->filter(fn($c) => isset($c['selected']) && $c['selected'] == '1');
+
+        if ($selectedCourses->isEmpty()) {
+            return back()->withErrors(['courses' => 'Please select at least one course.'])->withInput();
         }
 
-        // If your DB has a single `course_id` column, pick the first selected
-        $courseId = $request->input('course_id');
-        if (is_array($courseId)) {
-            $courseId = $courseId[0] ?? null;   // QUICK FIX: store first selection
-            // If you want true many-to-many later, move to a pivot table and store all.
-        }
+        return DB::transaction(function () use ($request, $selectedCourses) {
+            // Create the student (DO NOT set course/branch/batch here anymore)
+            $student = Student::create([
+                'student_id'        => $request->student_id,
+                'first_name'        => $request->first_name,
+                'last_name'         => $request->last_name,
+                'citizenship'       => $request->citizenship,
+                'nic_number'        => $request->nic_number,
+                'certificate_name'  => $request->certificate_name,
+                'gender'            => $request->gender,
+                'contact_address'   => $request->contact_address,
+                'permanent_address' => $request->permanent_address,
+                'email'             => $request->email,
+                'mobile'            => $request->mobile,
+                'whatsapp'          => $request->whatsapp,
+                // 'course_id'         => $request->course_id,
+                // 'branch_id'         => $request->branch_id,
+                // 'batch_id'          => $request->batch_id,
+                'status'            => 'registered',
+                'isFastTrack'       => 0,
+                'isActive'          => 1,
+            ]);
 
-        Student::create([
-            'student_id'        => $request->student_id,     // nullable OK
-            'first_name'              => $request->first_name,
-            'last_name'              => $request->last_name,
-            'citizenship'       => $request->citizenship,
-            'nic_number'        => $request->nic_number,
-            'certificate_name'  => $request->certificate_name,
-            'gender'            => $request->gender,
-            'contact_address'   => $request->contact_address,
-            'permanent_address' => $request->permanent_address,
-            'email'             => $request->email,
-            'mobile'            => $request->mobile,
-            'whatsapp'          => $request->whatsapp,
-            'course_id'         => $courseId,                // single value saved
-            'branch_id'         => $request->branch_id,
-            'batch_id'          => $request->batch_id,
-            'status'            => 'registered',
-            'isActive'          => 1,
-        ]);
 
-        return back()->with('success', 'Registration saved successfully!');
+            $preferredClass = $request->preferred_class;
+
+            // Insert one enrollment per selected course
+            foreach ($selectedCourses as $courseId => $c) {
+                Enrollment::create([
+                    'student_id'      => $student->id,
+                    'course_id'       => (string) $courseId,
+                    'branch_id'       => $c['branch_id'] ?? null,
+                    'batch_id'        => $c['batch_id']  ?? null,
+                    'track'           => $c['track']     ?? null,
+                    'is_fast_track'   => isset($c['is_fast_track'])
+                        ? (bool)$c['is_fast_track']
+                        : ($c['track'] ?? '') === 'Fast',
+                    'preferred_class' => $preferredClass,
+                    'status'          => 'registered',
+                ]);
+            }
+
+
+            return back()->with('success', 'Registration saved successfully with per-course enrollments!');
+        });
     }
 
+    public function pendingStudents()
+    {
+        $pending = \App\Models\Enrollment::query()
+            ->join('students', 'enrollments.student_id', '=', 'students.id')
+            ->leftJoin('courses', 'enrollments.course_id', '=', 'courses.course_id')
+            ->leftJoin('branches', 'enrollments.branch_id', '=', 'branches.branch_id')
+            ->leftJoin('batches', 'enrollments.batch_id', '=', 'batches.batch_id')
+            ->whereNull('enrollments.batch_id') // or any other pending condition
+            ->select([
+                'enrollments.id as enrollment_id',
+                'enrollments.course_id',
+                'enrollments.branch_id',
+                'enrollments.batch_id',
+                DB::raw("COALESCE(NULLIF(courses.course_name,''), enrollments.course_id) COLLATE utf8mb4_unicode_ci as course_label"),
+                'students.id as student_pk',
+                'students.student_id as public_student_id',
+                'students.first_name',
+                'students.last_name',
+                'students.certificate_name',
+                'students.citizenship',
+                'students.nic_number',
+                'students.gender',
+                'students.mobile',
+                'students.whatsapp',
+                'students.email',
+                'branches.branch_name',
+                'batches.batch_no',
+            ])
+
+            ->get();
+
+        $batch = Batch::where('isActive', 1)->orderBy('batch_no')->get();
+
+        return view('student.pendingStudents', compact('pending', 'batch'));
+    }
 
     public function studentManagement()
     {
-        $data = \App\Models\Student::select(
-            'students.*',
-            'branches.branch_name',
-            'courses.course_name',
-            'batches.batch_no'
-        )
-            ->leftJoin('branches', 'students.branch_id', '=', 'branches.branch_id')
-            ->leftJoin('courses', 'students.course_id', '=', 'courses.course_id')
-            ->leftJoin('batches', 'students.batch_id', '=', 'batches.batch_id')
-            ->where('students.isActive', 1)
+        $data = Enrollment::query()
+            ->join('students as s', 'enrollments.student_id', '=', 's.id')
+            ->leftJoin('branches as br', 'enrollments.branch_id', '=', 'br.branch_id')
+            ->leftJoin('courses  as c',  'enrollments.course_id',  '=', 'c.course_id')
+            ->leftJoin('batches  as ba', 'enrollments.batch_id',  '=', 'ba.batch_id')
+            ->select([
+                'enrollments.id as enrollment_id',
+                'enrollments.course_id',
+                'enrollments.branch_id',
+                'enrollments.batch_id',
+                'enrollments.track',
+                'enrollments.is_fast_track',
+                'enrollments.status as enrollment_status',
+
+                's.id as student_pk',
+                's.student_id as public_student_id',
+                's.first_name',
+                's.last_name',
+                's.nic_number',
+                's.email',
+                's.gender',
+                's.mobile',
+                's.whatsapp',
+                's.contact_address',
+                's.status as student_status',
+
+                DB::raw("COALESCE(c.course_name, enrollments.course_id) as course_label"),
+                'br.branch_name',
+                'ba.batch_no',
+            ])
+            ->where('s.isActive', 1)
+            ->orderBy('course_label')
+            ->orderBy('s.student_id')
             ->get();
 
-        $branch = \App\Models\Branch::where('isActive', 1)->get();
-        $course = \App\Models\Course::where('isActive', 1)->get();
-        $batch = \App\Models\Batch::where('isActive', 1)->get();
+        // map for edit hydration: student_pk => { course_id: {track, branch_id, batch_id} }
+        $enrollmentsByStudent = $data->groupBy('student_pk')->map(function ($rows) {
+            return $rows->keyBy('course_id')->map(function ($r) {
+                return [
+                    'track'     => $r->track ?: ($r->is_fast_track ? 'Fast' : 'Normal'),
+                    'branch_id' => $r->branch_id,
+                    'batch_id'  => $r->batch_id,
+                ];
+            });
+        });
 
-        return view('student.studentManagement', compact('data', 'branch', 'course', 'batch'));
+        // PENDING: no batch or blank-ish student_id
+        $pending = Enrollment::query()
+            ->join('students as s', 'enrollments.student_id', '=', 's.id')
+            ->leftJoin('courses  as c',  function ($j) {
+                $j->on(DB::raw("enrollments.course_id COLLATE utf8mb4_unicode_ci"),  '=', DB::raw("c.course_id COLLATE utf8mb4_unicode_ci"));
+            })
+            ->leftJoin('branches as br', function ($j) {
+                $j->on(DB::raw("enrollments.branch_id COLLATE utf8mb4_unicode_ci"), '=', DB::raw("br.branch_id COLLATE utf8mb4_unicode_ci"));
+            })
+            ->leftJoin('batches  as ba', function ($j) {
+                $j->on(DB::raw("enrollments.batch_id COLLATE utf8mb4_unicode_ci"),  '=', DB::raw("ba.batch_id COLLATE utf8mb4_unicode_ci"));
+            })
+            ->select([
+                'enrollments.id as enrollment_id',
+                'enrollments.course_id',
+                'enrollments.branch_id',
+                'enrollments.batch_id',
+                DB::raw("COALESCE(c.course_name, enrollments.course_id) COLLATE utf8mb4_unicode_ci as course_label"),
+
+                's.id as student_pk',
+                's.student_id as public_student_id',
+                's.first_name',
+                's.last_name',
+                's.mobile',
+                's.whatsapp',
+                's.email',
+
+                'br.branch_name',
+                'ba.batch_no',
+            ])
+            ->where('s.isActive', 1)
+            ->where(function ($q) {
+                $q->whereNull('enrollments.batch_id')                          // no batch
+                    ->orWhereRaw("NULLIF(TRIM(s.student_id), '') IS NULL")       // NULL / '' / spaces
+                    ->orWhereIn(DB::raw('LOWER(TRIM(s.student_id))'), ['0', 'n/a', 'na', '-']); // common placeholders
+            })
+            ->orderBy('course_label')
+            ->orderBy('s.first_name')
+            ->get();
+
+        // OPTIONAL: full list by course (for “All students by course” table)
+        $all = Enrollment::query()
+            ->join('students as s', 'enrollments.student_id', '=', 's.id')
+            ->leftJoin('courses  as c',  function ($j) {
+                $j->on(DB::raw("enrollments.course_id COLLATE utf8mb4_unicode_ci"),  '=', DB::raw("c.course_id COLLATE utf8mb4_unicode_ci"));
+            })
+            ->leftJoin('branches as br', function ($j) {
+                $j->on(DB::raw("enrollments.branch_id COLLATE utf8mb4_unicode_ci"), '=', DB::raw("br.branch_id COLLATE utf8mb4_unicode_ci"));
+            })
+            ->leftJoin('batches  as ba', function ($j) {
+                $j->on(DB::raw("enrollments.batch_id COLLATE utf8mb4_unicode_ci"),  '=', DB::raw("ba.batch_id COLLATE utf8mb4_unicode_ci"));
+            })
+            ->select([
+                'enrollments.id as enrollment_id',
+                'enrollments.course_id',
+                'enrollments.branch_id',
+                'enrollments.batch_id',
+                DB::raw("COALESCE(c.course_name, enrollments.course_id) COLLATE utf8mb4_unicode_ci as course_label"),
+                's.id as student_pk',
+                's.student_id as public_student_id',
+                's.first_name',
+                's.last_name',
+                's.mobile',
+                's.whatsapp',
+                's.email',
+                'br.branch_name',
+                'ba.batch_no',
+            ])
+            ->where('s.isActive', 1)
+            ->orderBy('course_label')
+            ->orderBy('s.first_name')
+            ->get();
+
+
+        $branch = Branch::where('isActive', 1)->get();
+        $course = Course::where('isActive', 1)->get();
+        $batch  = Batch::where('isActive', 1)->get();
+
+        return view('student.studentManagement', compact('data', 'branch', 'course', 'batch', 'enrollmentsByStudent', 'pending', 'all'));
     }
+
 
     public function updateIds(Request $request)
     {
@@ -141,213 +309,6 @@ class StudentController extends Controller
         return back()->with('success', 'Student updated successfully.');
     }
 
-
-
-    public function AddStudent(Request $request)
-    {
-        try {
-            $request->validate([
-                'first_name'       => 'required|string|max:255',
-                'last_name'        => 'required|string|max:255',
-                'email'            => 'required|email|max:255|unique:students,email',
-                'nic_number'       => 'required|string|max:20',
-                'mobile'           => 'required|digits:10',
-                'whatsapp'         => 'required|digits:10',
-                'contact_address'  => 'required|string|max:255',
-                'branch_id'        => 'required',
-                'course_id'        => 'required',
-                'batch_id'         => 'required',
-            ]);
-
-            if (Student::where('student_id', $request->student_id)->exists()) {
-                return back()->with('error', 'Student ID Already Exists');
-            }
-
-            Student::create([
-                'student_id'       => $request->student_id,
-                'first_name'       => $request->first_name,
-                'last_name'        => $request->last_name,
-                'nic_number'       => $request->nic_number,
-                'email'            => $request->email,
-                'gender'           => $request->gender,
-                'mobile'           => $request->mobile,
-                'whatsapp'         => $request->whatsapp,
-                'contact_address'  => $request->contact_address,
-                'branch_id'        => $request->branch_id,
-                'course_id'        => $request->course_id,
-                'batch_id'         => $request->batch_id,
-                'status'           => 'registered',
-                'isActive'         => 1,
-            ]);
-
-            return back()->with('message', 'Student Added Successfully');
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return back()->with('error', 'Something went wrong. Please try again');
-        }
-    }
-
-
-    // public function storeStudent(Request $request)
-    // {
-    //     $request->validate([
-    //         'student_id' => 'required|string',
-    //         'name' => 'required|string',
-    //         'citizenship' => 'required|string',
-    //         'nic_number' => 'required|string',
-    //         'certificate_name' => 'required|string',
-    //         'gender' => 'required|string',
-    //         'contact_address' => 'nullable|string',
-    //         'permanent_address' => 'nullable|string',
-    //         'email' => 'nullable|email',
-    //         'mobile' => 'nullable|string',
-    //         'whatsapp' => 'nullable|string',
-    //         'course_id' => 'required|integer',
-    //         'branch_id' => 'required|integer',
-    //         'batch_id' => 'required|integer',
-    //     ]);
-
-    //     Student::create([
-    //         'student_id' => $request->student_id,
-    //         'name' => $request->name,
-    //         'citizenship' => $request->citizenship,
-    //         'nic_number' => $request->nic_number,
-    //         'certificate_name' => $request->certificate_name,
-    //         'gender' => $request->gender,
-    //         'contact_address' => $request->contact_address,
-    //         'permanent_address' => $request->permanent_address,
-    //         'email' => $request->email,
-    //         'mobile' => $request->mobile,
-    //         'whatsapp' => $request->whatsapp,
-    //         'course_id' => $request->course_id,
-    //         'branch_id' => $request->branch_id,
-    //         'batch_id' => $request->batch_id,
-    //         'status' => 'registered',
-    //         'isActive' => 1,
-    //     ]);
-
-    //     return redirect()->back()->with('message', 'Student added successfully.');
-    // }
-    public function EditStudent(Request $request)
-    {
-        try {
-            $request->validate([
-                'id'              => 'required|integer|exists:students,id',
-                'student_id'      => 'required|string|max:255|unique:students,student_id,' . $request->id,
-                'first_name'      => 'required|string|max:255',
-                'last_name'       => 'required|string|max:255',
-                'nic_number'      => 'required|string|max:20',
-                'email'           => 'nullable|email',
-                'gender'          => 'nullable|string|max:20',
-                'mobile'          => 'nullable|string|max:20',
-                'whatsapp'        => 'nullable|string|max:20',
-                'contact_address' => 'nullable|string|max:500',
-                'branch_id'       => 'nullable|exists:branches,branch_id',
-                'course_id'       => 'nullable',
-                'batch_id'        => 'nullable|exists:batches,batch_id',
-            ]);
-
-            Student::where('id', $request->id)->update([
-                'student_id'      => $request->student_id,
-                'first_name'      => $request->first_name,
-                'last_name'       => $request->last_name,
-                'nic_number'      => $request->nic_number,
-                'email'           => $request->email,
-                'gender'          => $request->gender,
-                'mobile'          => $request->mobile,
-                'whatsapp'        => $request->whatsapp,
-                'contact_address' => $request->contact_address,
-                'branch_id'       => $request->branch_id,
-                'course_id'       => is_array($request->course_id) ? ($request->course_id[0] ?? null) : $request->course_id,
-                'batch_id'        => $request->batch_id,
-            ]);
-
-            return back()->with('message', 'Student Edited Successfully');
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return back()->with('error', 'Something went wrong. Please try again');
-        }
-    }
-
-
-    public function DeleteStudent($id)
-    {
-
-
-        try {
-
-
-            Student::where(['id' => $id])->update([
-                'isActive' => 0,
-            ]);
-
-
-            return redirect()->back()->with('message', 'Student Deleted Successfully');
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
-        }
-    }
-
-    // SearchStudent
-    public function SearchStudent(Request $request)
-    {
-        try {
-            $search = $request->search;
-
-            $data = Student::join('branches', 'students.branch_id', '=', 'branches.branch_id')
-                ->join('courses', 'students.course_id', '=', 'courses.course_id')
-                ->join('batches', 'students.batch_id', '=', 'batches.batch_id')
-                ->select('students.*', 'branches.branch_name', 'courses.course_name', 'batches.batch_no', 'batches.graduation_date')
-                ->where(function ($query) use ($search) {
-                    $query->where('students.student_id', $search)
-                        ->orWhere('students.nic', $search);
-                })
-                ->where('students.isActive', 1) // Apply isActive filter after OR condition
-                ->where('status', 'certified')
-                ->get();
-
-            return view('home.search', compact('data'));
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
-        }
-    }
-
-    // StudentDetails
-    public function StudentDetails($student_id)
-    {
-        try {
-            // Decode student ID
-            $studentId = base64_decode($student_id);
-
-            // Fetch student details
-            $data = Student::join('branches', 'students.branch_id', '=', 'branches.branch_id')
-                ->join('courses', 'students.course_id', '=', 'courses.course_id')
-                ->join('batches', 'students.batch_id', '=', 'batches.batch_id')
-                ->select('students.*', 'branches.branch_name', 'courses.course_name', 'batches.batch_no', 'batches.graduation_date')
-                ->where('students.student_id', $studentId)
-                ->where('students.isActive', 1)
-                ->where('status', 'certified')
-                ->get();
-            // dd($data);
-
-
-            return view('home.StudentDetails', compact('data'));
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Something went wrong. Please try again.');
-        }
-    }
-
-
-    public function getStudents(Request $request)
-    {
-
-
-        // Return Blade view for non-AJAX requests
-        return view('certificate.FilterStudentDetails', compact('students', 'courses', 'branches', 'batches'));
-    }
-
     public function publicForm()
     {
         $course = Course::where('isActive', 1)->get();
@@ -358,179 +319,74 @@ class StudentController extends Controller
         return view('student.studentRegistrationPublic', compact('course', 'branch', 'batch'));
     }
 
-
-    // public function certificateload()
-    // {
-    //     return view('Layout.certificateload');
-    // }
-
-    public function certificateLoad(Request $request)
+    public function assignBatch(Request $request)
     {
-        $studentIds = explode(',', $request->query('students'));
+        $validated = $request->validate([
+            'enrollment_id' => ['required', 'exists:enrollments,id'],
+            'batch_id'      => ['required', 'exists:batches,batch_id'],
+            'student_id'    => ['nullable', 'string', 'max:255', 'unique:students,student_id'],
+        ]);
 
-        // Update student status to "ongoing"
-        Student::whereIn('student_id', $studentIds)->update(['status' => 'ongoing']);
+        $enrollment = Enrollment::with('student')->findOrFail($validated['enrollment_id']);
 
-        // Fetch students with joined data
-        $students = Student::join('branches', 'students.branch_id', '=', 'branches.branch_id')
-            ->join('courses', 'students.course_id', '=', 'courses.course_id')
-            ->join('batches', 'students.batch_id', '=', 'batches.batch_id')
-            ->select(
-                'students.*',
-                'branches.branch_name',
-                'courses.course_name',
-                'batches.batch_no',
-                'batches.year_month',
-                'batches.graduation_date',
-                'branches.tvec_code'
-            )
-            ->whereIn('students.student_id', $studentIds)
-            ->where('students.isActive', 1)
-            ->where('status', 'ongoing')
-            ->get()
-            ->map(function ($student) {
-                // Encode student_id to make it URL-safe
-                $student->encoded_id = base64_encode($student->student_id);
+        DB::transaction(function () use ($enrollment, $validated) {
+            $enrollment->update(['batch_id' => $validated['batch_id']]);
 
-                return $student;
-            });
-
-
-        // Load certificate images based on the course
-        foreach ($students as $student) {
-
-            if ($student->isFastTrack == 1) {
-                if ($student->course_name === 'Basic Certificate for Barista') {
-                    $student->barista_certificate = asset('assets/images/certificates/barista-fast-track.PNG');
-                    $student->food_certificate = asset('assets/images/certificates/food-fast-track.PNG');
-                    $courseName = $student->course_name;
-                } elseif ($student->course_name === 'Basic Certificate for Bartender') {
-                    $student->bartender_certificate = asset('assets/images/certificates/bartender-fast-track.PNG');
-                    $student->food_certificate = asset('assets/images/certificates/food-fast-track.PNG');
-                    $courseName = $student->course_name;
-                }
-            } else {
-                if ($student->course_name === 'Basic Certificate for Barista') {
-                    $student->barista_certificate = asset('assets/images/certificates/barista.PNG');
-                    $student->food_certificate = asset('assets/images/certificates/food.PNG');
-                    $courseName = $student->course_name;
-                } elseif ($student->course_name === 'Basic Certificate for Bartender') {
-                    $student->bartender_certificate = asset('assets/images/certificates/bartender.PNG');
-                    $student->food_certificate = asset('assets/images/certificates/food.PNG');
-                    $courseName = $student->course_name;
-                }
+            if (!empty($validated['student_id'])) {
+                $enrollment->student->update(['student_id' => $validated['student_id']]);
             }
-        }
+        });
 
-        return view('certificate.certificateLoad', compact('students', 'courseName'));
+        return back()->with('message', 'Student ID & batch assigned successfully.');
     }
 
 
-    public function ongoingStudentDetails()
+    public function destroy($id)
     {
-        try {
-
-            $data = Student::join('branches', 'students.branch_id', '=', 'branches.branch_id')
-                ->join('courses', 'students.course_id', '=', 'courses.course_id')
-                ->join('batches', 'students.batch_id', '=', 'batches.batch_id')
-                ->select('students.*', 'branches.branch_name', 'courses.course_name', 'batches.batch_no')
-                ->where('students.isActive', 1)
-                ->where('status', 'ongoing')
-                ->get();
-
-            $course = Course::where('isActive', 1)->get();
-
-            $branch = Branch::where('isActive', 1)->get();
-
-            $batch = Batch::where('isActive', 1)->get();
-
-
-            return view('certificate.ongoingStudentDetails', compact('data', 'course', 'branch', 'batch'));
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
-        }
+        Enrollment::whereKey($id)->delete();
+        return back()->with('message', 'Enrollment removed.');
     }
 
-    public function certifiedStudentDetails()
+    public function updateFull(Request $request, $id)
     {
-        try {
+        $validated = $request->validate([
+            'student_id'      => 'required|string|max:255|unique:students,student_id,' . $id,
+            'batch_id'        => 'required|exists:batches,batch_id',
+            'first_name'     => 'nullable|string|max:255',
+            'last_name'      => 'nullable|string|max:255',
+            'nic_number'    => 'nullable|string|max:20',
+            'email'         => 'nullable|email',
+            'gender'      => 'nullable|string|max:20',
+            'mobile'      => 'nullable|string|max:20',
+            'whatsapp'    => 'nullable|string|max:20',
+            'contact_address' => 'nullable|string|max:500',
+            'branch_id'   => 'nullable|exists:branches,branch_id',
+            'course_id'   => 'nullable', // array if you use multi-course
+        ]);
 
-            $data = Student::join('branches', 'students.branch_id', '=', 'branches.branch_id')
-                ->join('courses', 'students.course_id', '=', 'courses.course_id')
-                ->join('batches', 'students.batch_id', '=', 'batches.batch_id')
-                ->select('students.*', 'branches.branch_name', 'courses.course_name', 'batches.batch_no')
-                ->where('students.isActive', 1)
-                ->where('status', 'certified')
-                ->get();
-
-            $course = Course::where('isActive', 1)->get();
-
-            $branch = Branch::where('isActive', 1)->get();
-
-            $batch = Batch::where('isActive', 1)->get();
+        $batch = Batch::where('isActive', 1)
+            ->orderBy('batch_no')
+            ->get();
 
 
-            return view('certificate.certifiedStudentDetails', compact('data', 'course', 'branch', 'batch'));
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
-        }
-    }
 
-    // public function updateStatus(Request $request)
-    // {
-    //     $studentIds = $request->input('student_ids');
 
-    //     if (empty($studentIds)) {
-    //         return response()->json(['success' => false, 'message' => 'No students selected']);
-    //     }
+        $student = Student::findOrFail($id);
+        $student->update($validated);
 
-    //     // Update student status to "Ongoing"
-    //     Student::whereIn('student_id', $studentIds)->update(['status' => 'ongoing']);
+        $enrollment = Enrollment::with('student')->findOrFail($validated['enrollment_id']);
 
-    //     return response()->json(['success' => true]);
-    // }
+        DB::transaction(function () use ($enrollment, $validated) {
+            // update batch on the enrollment
+            $enrollment->update(['batch_id' => $validated['batch_id']]);
 
-    public function updateStatuscertified(Request $request)
-    {
-        $studentIds = $request->input('student_ids');
+            // if user typed a new student_id, set it on the student
+            if (!empty($validated['student_id'])) {
+                $enrollment->student->update(['student_id' => $validated['student_id']]);
+            }
+        });
 
-        if (empty($studentIds)) {
-            return response()->json(['success' => false, 'message' => 'No students selected']);
-        }
 
-        // Update student status to "Ongoing"
-        Student::whereIn('student_id', $studentIds)->update(['status' => 'certified']);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function updateStatusongoing(Request $request)
-    {
-        $studentIds = $request->input('student_ids');
-
-        if (empty($studentIds)) {
-            return response()->json(['success' => false, 'message' => 'No students selected']);
-        }
-
-        // Update student status to "Ongoing"
-        Student::whereIn('student_id', $studentIds)->update(['status' => 'ongoing']);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function updateStatusbackregistered(Request $request)
-    {
-        $studentIds = $request->input('student_ids');
-
-        if (empty($studentIds)) {
-            return response()->json(['success' => false, 'message' => 'No students selected']);
-        }
-
-        // Update student status to "Ongoing"
-        Student::whereIn('student_id', $studentIds)->update(['status' => 'registered']);
-
-        return response()->json(['success' => true]);
+        return back()->with('success', 'Student updated successfully.');
     }
 }

@@ -166,154 +166,216 @@
                                     @endif
                                     <form method="POST" action="{{ route('students.store') }}" id="studentForm">
                                         @csrf
-                                        <input type="hidden" name="record_id" id="record_id">
-                                        <div class="section">
-                                            <h5 class="mb-3">Student Information</h5>
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
+                                        {{-- Student info --}}
+                                        <div class="section mb-3">
+                                            <h6 class="section-title mb-3">Student Information</h6>
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
                                                     <label for="student_id" class="form-label">Student ID <span
                                                             class="text-danger">*</span></label>
-                                                    <input type="text" name="student_id" class="form-control"
-                                                        required>
-                                                </div>
-                                            </div>
-
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <label for="first_name" class="form-label">First Name <span
-                                                            class="text-danger">*</span></label>
-                                                    <input type="text" name="first_name" class="form-control" required>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="last_name" class="form-label">Last Name <span
-                                                            class="text-danger">*</span></label>
-                                                    <input type="text" name="last_name" class="form-control" required>
+                                                    <input type="text" name="student_id" id="student_id"
+                                                        class="form-control" value="{{ old('student_id') }}">
                                                 </div>
 
-                                            </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">First Name</label>
+                                                    <input type="text" name="first_name" class="form-control"
+                                                        value="{{ old('first_name') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Last Name</label>
+                                                    <input type="text" name="last_name" class="form-control"
+                                                        value="{{ old('last_name') }}">
+                                                </div>
 
-                                            <div class="row mb-3">
-                                                <div class="col-md-6">
-                                                    <label for="citizenship" class="form-label">Citizenship <span
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Citizenship <span
                                                             class="text-danger">*</span></label>
                                                     <input type="text" name="citizenship" class="form-control"
-                                                        required>
+                                                        value="{{ old('citizenship') }}">
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <label for="nic_number" class="form-label">NIC Number <span
+                                                <div class="col-md-4">
+                                                    <label class="form-label">NIC Number <span
                                                             class="text-danger">*</span></label>
                                                     <input type="text" name="nic_number" class="form-control"
-                                                        required>
+                                                        value="{{ old('nic_number') }}">
                                                 </div>
-                                                <div class="col-md-12">
-                                                    <label for="certificate_name" class="form-label">Name on
-                                                        Certificate
-                                                        <span class="text-danger">*</span></label>
-                                                    <input type="text" name="certificate_name"
-                                                        class="form-control" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="row mb-3">
                                                 <div class="col-md-4">
-                                                    <label for="gender" class="form-label">Gender <span
+                                                    <label class="form-label">Gender <span
                                                             class="text-danger">*</span></label>
-                                                    <select name="gender" class="form-select" required>
-                                                        <option value="" disabled selected>-- Select --</option>
-                                                        <option>Male</option>
-                                                        <option>Female</option>
-                                                        <option>Other</option>
+                                                    <select name="gender" class="form-select">
+                                                        <option value="" disabled
+                                                            {{ old('gender') ? '' : 'selected' }}>-- Select --</option>
+                                                        <option {{ old('gender') == 'Male' ? 'selected' : '' }}>Male
+                                                        </option>
+                                                        <option {{ old('gender') == 'Female' ? 'selected' : '' }}>
+                                                            Female
+                                                        </option>
+                                                        <option {{ old('gender') == 'Other' ? 'selected' : '' }}>Other
+                                                        </option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <label for="mobile" class="form-label">Mobile Number</label>
-                                                    <input type="text" name="mobile" class="form-control">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label for="whatsapp" class="form-label">WhatsApp Number</label>
-                                                    <input type="text" name="whatsapp" class="form-control">
-                                                </div>
-                                            </div>
 
-                                            <div class="mb-3">
-                                                <label for="email" class="form-label">Email Address</label>
-                                                <input type="email" name="email" class="form-control">
-                                            </div>
+                                                <div class="col-md-12">
+                                                    <label class="form-label">Name on Certificate <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="text" name="certificate_name"
+                                                        class="form-control" value="{{ old('certificate_name') }}">
+                                                </div>
 
-                                            <div class="row mb-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Mobile</label>
+                                                    <input type="text" name="mobile" class="form-control"
+                                                        value="{{ old('mobile') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">WhatsApp</label>
+                                                    <input type="text" name="whatsapp" class="form-control"
+                                                        value="{{ old('whatsapp') }}">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Email</label>
+                                                    <input type="email" name="email" class="form-control"
+                                                        value="{{ old('email') }}">
+                                                </div>
+
                                                 <div class="col-md-6">
-                                                    <label for="contact_address" class="form-label">Contact
-                                                        Address</label>
-                                                    <textarea name="contact_address" rows="2" class="form-control"></textarea>
+                                                    <label class="form-label">Contact Address</label>
+                                                    <textarea name="contact_address" rows="2" class="form-control">{{ old('contact_address') }}</textarea>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label for="permanent_address" class="form-label">Permanent
-                                                        Address</label>
-                                                    <textarea name="permanent_address" rows="2" class="form-control"></textarea>
+                                                    <label class="form-label">Permanent Address</label>
+                                                    <textarea name="permanent_address" rows="2" class="form-control">{{ old('permanent_address') }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <hr class="my-4">
 
+                                        {{-- Enrollment --}}
                                         <div class="section">
-                                            <h4 class="section-title">Enrollment</h4>
-                                            <div class="row g-2">
-                                                <div class="col-12 col-md-4">
+                                            <h6 class="section-title mb-2">Enrollment</h6>
+                                            <div class="row g-3">
+                                                <div class="col-12 col-md-8">
                                                     <label class="form-label required d-block mb-2">Courses</label>
-                                                    <div class="row g-2">
+                                                    <div class="row g-3">
                                                         @foreach ($course ?? [] as $item)
+                                                            @php
+                                                                $checked =
+                                                                    old("courses.$item->course_id.selected") == '1';
+                                                                $oldTrack = old("courses.$item->course_id.track");
+                                                                $oldBranch = old("courses.$item->course_id.branch_id");
+                                                            @endphp
+
                                                             <div class="col-12 col-sm-6">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        name="course_id[]"
-                                                                        id="course_{{ $item->course_id }}"
-                                                                        value="{{ $item->course_id }}"
-                                                                        {{ is_array(old('course_id')) && in_array($item->course_id, old('course_id')) ? 'checked' : '' }}>
-                                                                    <label class="form-check-label"
-                                                                        for="course_{{ $item->course_id }}">
-                                                                        {{ $item->course_name }}
-                                                                    </label>
+                                                                <div class="border rounded p-3 h-100">
+                                                                    {{-- Course checkbox --}}
+                                                                    <div class="form-check mb-2">
+                                                                        <input class="form-check-input course-checkbox"
+                                                                            type="checkbox"
+                                                                            id="course_{{ $item->course_id }}"
+                                                                            name="courses[{{ $item->course_id }}][selected]"
+                                                                            value="1"
+                                                                            {{ $checked ? 'checked' : '' }}
+                                                                            data-target="#wrap_{{ $item->course_id }}">
+                                                                        <label class="form-check-label fw-semibold"
+                                                                            for="course_{{ $item->course_id }}">
+                                                                            {{ $item->course_name }}
+                                                                        </label>
+                                                                    </div>
+
+                                                                    {{-- Track + Branch (hidden until checked) --}}
+                                                                    <div id="wrap_{{ $item->course_id }}"
+                                                                        class="ms-4">
+                                                                        {{-- Track --}}
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input"
+                                                                                type="radio"
+                                                                                id="track_normal_{{ $item->course_id }}"
+                                                                                name="courses[{{ $item->course_id }}][track]"
+                                                                                value="Normal"
+                                                                                {{ $oldTrack === 'Normal' ? 'checked' : '' }}>
+                                                                            <label class="form-check-label"
+                                                                                for="track_normal_{{ $item->course_id }}">Normal</label>
+                                                                        </div>
+                                                                        <div class="form-check">
+                                                                            <input class="form-check-input"
+                                                                                type="radio"
+                                                                                id="track_fast_{{ $item->course_id }}"
+                                                                                name="courses[{{ $item->course_id }}][track]"
+                                                                                value="Fast"
+                                                                                {{ $oldTrack === 'Fast' ? 'checked' : '' }}>
+                                                                            <label class="form-check-label"
+                                                                                for="track_fast_{{ $item->course_id }}">Fast
+                                                                                Track</label>
+                                                                        </div>
+
+                                                                        {{-- Branch per course --}}
+                                                                        <div class="mt-2">
+                                                                            <label for="branch_{{ $item->course_id }}"
+                                                                                class="form-label">Branch</label>
+                                                                            <select
+                                                                                name="courses[{{ $item->course_id }}][branch_id]"
+                                                                                id="branch_{{ $item->course_id }}"
+                                                                                class="form-select">
+                                                                                <option value="" disabled
+                                                                                    {{ $oldBranch ? '' : 'selected' }}>
+                                                                                    -- Select Branch --</option>
+                                                                                @foreach ($branch ?? [] as $b)
+                                                                                    <option
+                                                                                        value="{{ $b->branch_id }}"
+                                                                                        {{ $oldBranch == $b->branch_id ? 'selected' : '' }}>
+                                                                                        {{ $b->branch_name }}
+                                                                                    </option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+
+                                                                        {{-- (Optional) Per-course batch right here (leave commented if not needed) --}}
+                                                                        <div class="mt-2">
+                                                                            <label class="form-label">Batch</label>
+                                                                            <select
+                                                                                name="courses[{{ $item->course_id }}][batch_id]"
+                                                                                id="batch_{{ $item->course_id }}"
+                                                                                class="form-select">
+                                                                                <option value="" disabled
+                                                                                    selected>-- Select Batch --</option>
+                                                                                @foreach ($batch ?? [] as $bt)
+                                                                                    <option
+                                                                                        value="{{ $bt->batch_id }}">
+                                                                                        {{ $bt->batch_no }}</option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         @endforeach
                                                     </div>
                                                 </div>
 
-
                                                 <div class="col-12 col-md-4">
-                                                    <label for="branch_id" class="form-label required">Branch</label>
-                                                    <select name="branch_id" id="branch_id" class="form-select"
-                                                        required>
+                                                    <label class="form-label">Preferred class</label>
+                                                    <select name="preferred_class" class="form-select">
                                                         <option value="" disabled
-                                                            {{ old('branch_id') ? '' : 'selected' }}>
-                                                            -- Select Branch --
+                                                            {{ old('preferred_class') ? '' : 'selected' }}>
+                                                            -- Select Preferred class --
                                                         </option>
-                                                        @foreach ($branch ?? [] as $item)
-                                                            <option value="{{ $item->branch_id }}"
-                                                                {{ old('branch_id') == $item->branch_id ? 'selected' : '' }}>
-                                                                {{ $item->branch_name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="col-12 col-md-4">
-                                                    <label for="batch_id" class="form-label required">Batch</label>
-                                                    <select name="batch_id" id="batch_id" class="form-select"
-                                                        required>
-                                                        <option value="" disabled
-                                                            {{ old('batch_id') ? '' : 'selected' }}>-- Select Batch --
-                                                        </option>
-                                                        @foreach ($batch ?? [] as $item)
-                                                            <option value="{{ $item->batch_id }}"
-                                                                {{ old('batch_id') == $item->batch_id ? 'selected' : '' }}>
-                                                                {{ $item->batch_no }}
-                                                            </option>
-                                                        @endforeach
+                                                        <option value="weekday class"
+                                                            {{ old('preferred_class') == 'weekday class' ? 'selected' : '' }}>
+                                                            Weekday class</option>
+                                                        <option value="weekend class"
+                                                            {{ old('preferred_class') == 'weekend class' ? 'selected' : '' }}>
+                                                            Weekend class (Sat/Sun)</option>
+                                                        <option value="weekday or weekend class"
+                                                            {{ old('preferred_class') == 'weekday or weekend class' ? 'selected' : '' }}>
+                                                            Weekday or weekend</option>
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
+
 
                                         <div class="d-grid">
                                             <button type="submit" class="btn btn-success btn-lg"
@@ -333,99 +395,77 @@
                                 </div>
                             </div>
                         </div>
-                        <br>
+                        <hr class="my-5">
 
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
+                        {{-- <table id="students-table" class="table table-bordered dt-responsive nowrap w-100">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>NIC</th>
+                                    <th>Email</th>
+                                    <th>Gender</th>
+                                    <th>Mobile</th>
+                                    <th>Whatsapp</th>
+                                    <th>Contact Address</th>
+                                    <th>Batch ID</th>
+                                    <th>Course</th>
+                                    <th>Branch</th>
+                                    <th>Track</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($data as $r)
+                                    <tr>
+                                        <td>{{ $r->public_student_id }}</td>
+                                        <td>{{ $r->first_name }}</td>
+                                        <td>{{ $r->last_name }}</td>
+                                        <td>{{ $r->nic_number }}</td>
+                                        <td>{{ $r->email }}</td>
+                                        <td>{{ $r->gender }}</td>
+                                        <td>{{ $r->mobile }}</td>
+                                        <td>{{ $r->whatsapp }}</td>
+                                        <td>{{ $r->contact_address }}</td>
+                                        <td>{{ $r->batch_no ?? '-' }}</td>
+                                        <td>{{ $r->course_label }}</td>
+                                        <td>{{ $r->branch_name ?? '-' }}</td>
+                                        <td>{{ $r->track ?: ($r->is_fast_track ? 'Fast' : 'Normal') }}</td>
+                                        <td class="text-nowrap">
 
-                                        <div class="scrollme">
-                                            <table id="datatable-buttons"
-                                                class="table table-bordered dt-responsive  nowrap w-100">
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
 
-                                                <thead>
-                                                    <tr>
-                                                        <th>Student ID</th>
-                                                        <th>First Name</th>
-                                                        <th>Last Name</th>
-                                                        <th>NIC</th>
-                                                        <th>Email</th>
-                                                        <th>Gender</th>
-                                                        <th>Mobile</th>
-                                                        <th>Whatsapp</th>
-                                                        <th>Contact Address</th>
-                                                        <th>Batch ID</th>
-                                                        <th>Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @forelse ($data as $item)
-                                                        <tr>
-                                                            <td>{{ $item->student_id }}</td>
-                                                            <td>{{ $item->first_name }}</td>
-                                                            <td>{{ $item->last_name }}</td>
-                                                            <td>{{ $item->nic_number }}</td>
-                                                            <td>{{ $item->email }}</td>
-                                                            <td>{{ $item->gender }}</td>
-                                                            <td>{{ $item->mobile }}</td>
-                                                            <td>{{ $item->whatsapp }}</td>
-                                                            <td>{{ $item->contact_address }}</td>
-                                                            <td>{{ $item->batch_no }}</td>
-                                                            <td>
-                                                                <button type="button"
-                                                                    class="btn btn-outline-info btn-sm edit-btn"
-                                                                    data-id="{{ $item->id }}"
-                                                                    data-student_id="{{ $item->student_id }}"
-                                                                    data-first_name="{{ $item->first_name }}"
-                                                                    data-last_name="{{ $item->last_name }}"
-                                                                    data-nic_number="{{ $item->nic_number }}"
-                                                                    data-email="{{ $item->email }}"
-                                                                    data-gender="{{ $item->gender }}"
-                                                                    data-mobile="{{ $item->mobile }}"
-                                                                    data-whatsapp="{{ $item->whatsapp }}"
-                                                                    data-contact_address="{{ $item->contact_address }}"
-                                                                    data-branch_id="{{ $item->branch_id }}"
-                                                                    data-batch_id="{{ $item->batch_id }}"
-                                                                    data-course_id="{{ $item->course_id }}">
-                                                                    Edit
-                                                                </button>
+                        @push('scripts')
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    $('#students-table').DataTable({
+                                        dom: 'Bfrtip',
+                                        buttons: ['copy', 'excel', 'pdf', 'colvis'],
+                                        pageLength: 10,
+                                        order: [] // keep your server-side ordering
+                                    });
+                                });
+                            </script>
+                        @endpush --}}
 
-                                                                <a href="{{ url('/deleteStudent/' . $item->id) }}"
-                                                                    class="btn btn-outline-danger btn-sm"
-                                                                    onclick="return confirm('Are you sure?')">
-                                                                    Delete
-                                                                </a>
-                                                            </td>
 
-                                                        </tr>
-                                                    @empty
-                                                        <tr>
-                                                            <td colspan="11" class="text-center">No records found
-                                                            </td>
-                                                        </tr>
-                                                    @endforelse
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> <!-- end col -->
-                        </div>
+                        {{-- </div> --}}
                     </div>
 
-                    {{-- </div> --}}
+
+
+
+
+                    {{--        Footer --}}
+                    @include('Layout.footer')
+                    {{--        End Footer --}}
                 </div>
-
-
-
-
-
-                {{--        Footer --}}
-                @include('Layout.footer')
-                {{--        End Footer --}}
-            </div>
-            <!-- end main content-->
+                <!-- end main content-->
 
             </div>
             <!-- END layout-wrapper -->
@@ -490,97 +530,110 @@
         color: #007bff;
     }
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const form         = document.getElementById('studentForm');
-  const submitBtn    = document.getElementById('submitBtn');
-  const defaultAction= form.getAttribute('action'); // students.store
 
-  function setValue(id, val) {
-    const el = document.querySelector(`[name="${id}"]`) || document.getElementById(id);
-    if (!el) return;
-    if (el.tagName === 'SELECT') {
-      el.value = val ?? '';
-      el.dispatchEvent(new Event('change'));
-    } else {
-      el.value = val ?? '';
+
+<script>
+    function hydrateCoursesFromMap(coursesMap) {
+        // 1) Clear everything
+        document.querySelectorAll('.course-checkbox').forEach(cb => {
+            cb.checked = false;
+            cb.dispatchEvent(new Event('change')); // will hide & disable radios/selects
+        });
+
+        // 2) Apply payload
+        if (!coursesMap) return;
+        Object.entries(coursesMap).forEach(([courseId, meta]) => {
+            const cb = document.getElementById(`course_${courseId}`);
+            if (!cb) return;
+
+            // check and reveal group
+            cb.checked = true;
+            cb.dispatchEvent(new Event('change'));
+
+            // set track radio
+            if (meta.track) {
+                const rid = meta.track === 'Fast' ? `track_fast_${courseId}` : `track_normal_${courseId}`;
+                const r = document.getElementById(rid);
+                if (r) r.checked = true;
+            }
+
+            // set per-course branch
+            if (meta.branch_id) {
+                const sel = document.getElementById(`branch_${courseId}`);
+                if (sel) sel.value = meta.branch_id;
+            }
+
+            // optional per-course batch (if you render one)
+            const selBatch = document.getElementById(`batch_${courseId}`);
+            if (selBatch && meta.batch_id) selBatch.value = meta.batch_id;
+        });
     }
-  }
-
-  // When clicking "Edit", populate form and switch action to updateIds
-  document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Fill fields
-      setValue('record_id',      btn.dataset.id);
-      setValue('student_id',     btn.dataset.student_id);
-      setValue('first_name',     btn.dataset.first_name);
-      setValue('last_name',      btn.dataset.last_name);
-      setValue('nic_number',     btn.dataset.nic_number);
-      setValue('email',          btn.dataset.email);
-      setValue('gender',         btn.dataset.gender);
-      setValue('mobile',         btn.dataset.mobile);
-      setValue('whatsapp',       btn.dataset.whatsapp);
-      setValue('contact_address',btn.dataset.contact_address);
-      setValue('branch_id',      btn.dataset.branch_id);
-      setValue('batch_id',       btn.dataset.batch_id);
-      setValue('course_id',      btn.dataset.course_id); // if single course
-
-      // Switch to update route
-      form.setAttribute('action', "{{ route('students.updateIds') }}");
-      submitBtn.textContent = 'Update Student';
-
-      // Scroll to the form
-      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  });
-
-  // Optional: when you manually clear record_id, switch back to create mode
-  window.resetToCreateMode = function() {
-    document.getElementById('record_id').value = '';
-    form.setAttribute('action', defaultAction);
-    submitBtn.textContent = 'Submit Registration';
-  };
-});
 </script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@if (session('success') || session('message') || session('error'))
+
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const msg  = @json(session('success') ?? session('message') ?? session('error'));
-    const icon = {!! session('error') ? "'error'" : "'success'" !!};
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('studentForm');
+        if (!form) return;
+        const submitBtn = document.getElementById('submitBtn');
+        const defaultAction = form.getAttribute('action'); // students.store
 
-    Swal.fire({
-      title: icon === 'success' ? 'Success' : 'Error',
-      text: msg,
-      icon: icon,
-      confirmButtonText: 'OK',
-      allowOutsideClick: false,
-      allowEscapeKey: false
-    }).then(() => {
-      // Refresh the page after the user clicks OK
-      // Use location.replace to avoid re-post prompts and keep a clean URL
-      location.replace(window.location.pathname + window.location.search);
-      // Or simply: window.location.reload();
+        function setValueByNameOrId(nameOrId, val) {
+            let el = document.querySelector(`[name="${nameOrId}"]`);
+            if (!el) el = document.getElementById(nameOrId);
+            if (!el) return;
+            if (el.tagName === 'SELECT') {
+                el.value = val ?? '';
+                el.dispatchEvent(new Event('change'));
+            } else {
+                el.value = val ?? '';
+            }
+        }
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Student-level fields (existing)
+                setValueByNameOrId('record_id', btn.dataset.student_pk);
+                setValueByNameOrId('student_id', btn.dataset.public_student_id);
+
+                setValueByNameOrId('first_name', btn.dataset.first_name);
+                setValueByNameOrId('last_name', btn.dataset.last_name);
+                setValueByNameOrId('nic_number', btn.dataset.nic_number);
+                setValueByNameOrId('email', btn.dataset.email);
+                setValueByNameOrId('gender', btn.dataset.gender);
+                setValueByNameOrId('mobile', btn.dataset.mobile);
+                setValueByNameOrId('whatsapp', btn.dataset.whatsapp);
+                setValueByNameOrId('contact_address', btn.dataset.contact_address);
+                setValueByNameOrId('branch_id', btn.dataset.branch_id);
+                setValueByNameOrId('batch_id', btn.dataset.batch_id);
+                setValueByNameOrId('course_id', btn.dataset
+                    .course_id); // only if you still keep a single course field
+
+                // NEW: hydrate course checkboxes + per-course fields
+                let map = {};
+                try {
+                    map = btn.dataset.courses ? JSON.parse(btn.dataset.courses) : {};
+                } catch (e) {
+                    map = {};
+                }
+                hydrateCoursesFromMap(map);
+
+                // Switch to update route
+                form.setAttribute('action', "{{ route('students.updateIds') }}");
+                if (submitBtn) submitBtn.textContent = 'Update Student';
+
+                form.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+
+        // Reset helper (unchanged)
+        window.resetToCreateMode = function() {
+            form.setAttribute('action', defaultAction);
+            if (submitBtn) submitBtn.textContent = 'Submit Registration';
+            const rid = document.querySelector('[name="record_id"]');
+            if (rid) rid.value = '';
+        };
     });
-  });
 </script>
-@endif
-<script>
-  // Copy mobile -> WhatsApp (unchanged)
-  document.getElementById('copyMobile')?.addEventListener('click', function(e){
-    e.preventDefault();
-    const m = document.getElementById('mobile');
-    const w = document.getElementById('whatsapp');
-    if (m && w) w.value = m.value;
-  });
-
-  // Build hidden 'name' from first/last on SUBMIT (works with Enter key too)
-  const form = document.querySelector('form[action="{{ route('students.store') }}"]');
-  form?.addEventListener('submit', function () {
-    const first  = (document.getElementById('first_name')?.value || '').trim();
-    const last   = (document.getElementById('last_name')?.value  || '').trim();
-    const hidden = document.getElementById('nameHidden');
-    if (hidden) hidden.value = (first + ' ' + last).trim();
-  });
-</script>
-

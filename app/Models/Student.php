@@ -13,6 +13,10 @@ class Student extends Model
     'student_id', 'first_name',
     'last_name', 'citizenship', 'nic_number', 'certificate_name',
     'gender', 'contact_address', 'permanent_address', 'email', 'mobile',
-    'whatsapp', 'course_id', 'track', 'branch_id', 'batch_id', 'status', 'isActive'
+    'whatsapp', 'course_id', 'isFastTrack', 'branch_id', 'batch_id', 'status', 'isActive'
 ];
+public function enrollments()
+{
+    return $this->hasMany(\App\Models\Enrollment::class);
+}
 }

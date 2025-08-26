@@ -6,53 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateStudentsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    public function up()
+    public function up(): void
     {
-        Schema::create('students', function (Blueprint $table) {
-            $table->id(); // Auto-increment primary key
+        Schema::table('students', function (Blueprint $table) {
+            $table->string('branch_id')->nullable()->change();
+            $table->string('batch_id')->nullable()->change();
+            $table->string('course_id')->nullable()->change();
 
-            $table->string('student_id')->unique(); // Optional: Make this unique if needed
-            $table->string('first_name')->nullable();
-            $table->string('last_name')->nullable(); // Last name
-            $table->string('citizenship')->nullable();
-            $table->string('nic_number')->nullable();
-            $table->string('certificate_name')->nullable();
-            $table->string('gender')->nullable();
-            $table->text('contact_address')->nullable();
-            $table->text('permanent_address')->nullable();
-            $table->string('email')->nullable();
-            $table->string('mobile')->nullable();
-            $table->string('whatsapp')->nullable();
-
-            // $table->unsignedBigInteger('course_id')->nullable();
-            // $table->unsignedBigInteger('branch_id')->nullable();
-            // $table->unsignedBigInteger('batch_id')->nullable();
-            $table->string('branch_id');
-            $table->foreign('branch_id')->references('branch_id')->on('branches');
-            $table->string('batch_id');
-            $table->foreign('batch_id')->references('batch_id')->on('batches');
-            $table->string('course_id');
-            $table->foreign('course_id')->references('course_id')->on('courses');
-            $table->string('status')->default('registered');
-            $table->boolean('isFastTrack')->default(0);
-            $table->boolean('isActive')->default(1);
-
-            $table->timestamps();
-
-            // Indexes
-            // $table->index('course_id');
-            // $table->index('branch_id');
-            // $table->index('batch_id');
+            // Deprecated: student-wide fast-track.
+            // Keep column but stop using it; per-enrollment has is_fast_track now.
+            $table->boolean('isFastTrack')->default(0)->change();
         });
     }
 
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('students');
+        // no-op (or reverse if you really need)
     }
 }

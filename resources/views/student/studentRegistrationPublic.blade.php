@@ -325,24 +325,24 @@
                                         <div class="col-12 col-md-6">
                                             <label for="first_name" class="form-label required">First Name</label>
                                             <input type="text" id="first_name" name="first_name" class="form-control"
-                                                required value="{{ old('first_name') }}">
+                                                 value="{{ old('first_name') }}">
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <label for="last_name" class="form-label required">Last Name</label>
                                             <input type="text" id="last_name" name="last_name" class="form-control"
-                                                required value="{{ old('last_name') }}">
+                                                 value="{{ old('last_name') }}">
                                         </div>
 
 
                                         <div class="col-12 col-md-6">
                                             <label for="citizenship" class="form-label required">Citizenship</label>
                                             <input type="text" name="citizenship" id="citizenship"
-                                                class="form-control" required value="{{ old('citizenship') }}">
+                                                class="form-control"  value="{{ old('citizenship') }}">
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <label for="nic_number" class="form-label required">NIC Number</label>
                                             <input type="text" name="nic_number" id="nic_number" class="form-control"
-                                                required placeholder="199012345678 or 901234567V"
+                                                 placeholder="199012345678 or 901234567V"
                                                 pattern="^(\d{9}[VvXx]|\d{12})$" value="{{ old('nic_number') }}">
                                         </div>
 
@@ -350,11 +350,11 @@
                                             <label for="certificate_name" class="form-label required">Name on
                                                 Certificate</label>
                                             <input type="text" name="certificate_name" id="certificate_name"
-                                                class="form-control" required value="{{ old('certificate_name') }}">
+                                                class="form-control"  value="{{ old('certificate_name') }}">
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <label for="gender" class="form-label required">Gender</label>
-                                            <select name="gender" id="gender" class="form-select" required>
+                                            <select name="gender" id="gender" class="form-select">
                                                 <option value="" disabled {{ old('gender') ? '' : 'selected' }}>
                                                     -- Select --</option>
                                                 <option {{ old('gender') === 'Male' ? 'selected' : '' }}>Male</option>
@@ -374,13 +374,13 @@
                                         <div class="col-12 col-md-4">
                                             <label for="mobile" class="form-label required">Mobile Number</label>
                                             <input type="text" name="mobile" id="mobile" class="form-control"
-                                                required placeholder="+9471XXXXXXX or 071XXXXXXX"
+                                             placeholder="+9471XXXXXXX or 071XXXXXXX"
                                                 pattern="^(?:\+94|0)?7\d{8}$" value="{{ old('mobile') }}">
                                         </div>
                                         <div class="col-12 col-md-4">
                                             <label for="whatsapp" class="form-label required">WhatsApp Number</label>
                                             <input type="text" name="whatsapp" id="whatsapp"
-                                                class="form-control"required pattern="^(?:\+94|0)?7\d{8}$"
+                                                class="form-control" pattern="^(?:\+94|0)?7\d{8}$"
                                                 value="{{ old('whatsapp') }}">
                                             <div class="form-text"><a href="#" id="copyMobile">Same as
                                                     mobile</a></div>
@@ -416,7 +416,7 @@
                                             <label for="education_level" class="form-label required">Education
                                                 Level</label>
                                             <select name="education_level" id="education_level" class="form-control"
-                                                required>
+                                                >
                                                 <option value="" disabled
                                                     {{ old('education_level') ? '' : 'selected' }}>
                                                     -- Select Education Level --</option>
@@ -455,7 +455,7 @@
                                                 Employer</label>
                                             <input type="text" name="occupation" id="occupation"
                                                 class="form-control" value="{{ old('occupation') }}"
-                                                placeholder="if there is no employer, say 'no'" required>
+                                                placeholder="if there is no employer, say 'no'">
                                         </div>
                                     </div>
                                 </div>
@@ -472,6 +472,7 @@
                                                     @php
                                                         $checked = old("courses.$item->course_id.selected") == '1';
                                                         $oldTrack = old("courses.$item->course_id.track");
+                                                        $oldBranch = old("courses.$item->course_id.branch_id");
                                                     @endphp
 
                                                     <div class="col-12 col-sm-6">
@@ -483,81 +484,102 @@
                                                                     id="course_{{ $item->course_id }}"
                                                                     name="courses[{{ $item->course_id }}][selected]"
                                                                     value="1" {{ $checked ? 'checked' : '' }}
-                                                                    data-target="#trackWrap_{{ $item->course_id }}">
+                                                                    data-target="#trackBranchWrap_{{ $item->course_id }}">
                                                                 <label class="form-check-label fw-semibold"
                                                                     for="course_{{ $item->course_id }}">
                                                                     {{ $item->course_name }}
                                                                 </label>
                                                             </div>
 
-                                                            {{-- Track radios for this course --}}
-                                                            <div id="trackWrap_{{ $item->course_id }}"
-                                                                class="ms-4">
+                                                            {{-- Track radios + Branch dropdown --}}
+                                                            <div id="trackBranchWrap_{{ $item->course_id }}"
+                                                                class="ms-4 mt-2">
+                                                                {{-- Track radios --}}
                                                                 <div class="form-check">
                                                                     <input class="form-check-input" type="radio"
                                                                         id="track_normal_{{ $item->course_id }}"
                                                                         name="courses[{{ $item->course_id }}][track]"
                                                                         value="Normal"
-                                                                        {{ $oldTrack === 'Normal' ? 'checked' : '' }}
-                                                                        {{ $checked ? '' : 'disabled' }}
-                                                                        {{ $checked ? 'required' : '' }}>
+                                                                        {{ $oldTrack === 'Normal' ? 'checked' : '' }}>
                                                                     <label class="form-check-label"
-                                                                        for="track_normal_{{ $item->course_id }}">Normal
-                                                                        </label>
+                                                                        for="track_normal_{{ $item->course_id }}">Normal</label>
                                                                 </div>
                                                                 <div class="form-check">
                                                                     <input class="form-check-input" type="radio"
                                                                         id="track_fast_{{ $item->course_id }}"
                                                                         name="courses[{{ $item->course_id }}][track]"
                                                                         value="Fast"
-                                                                        {{ $oldTrack === 'Fast' ? 'checked' : '' }}
-                                                                        {{ $checked ? '' : 'disabled' }}
-                                                                        {{ $checked ? 'required' : '' }}>
+                                                                        {{ $oldTrack === 'Fast' ? 'checked' : '' }}>
                                                                     <label class="form-check-label"
                                                                         for="track_fast_{{ $item->course_id }}">Fast
                                                                         Track</label>
                                                                 </div>
-
-                                                                {{-- per-course track validation error (optional) --}}
                                                                 @error("courses.$item->course_id.track")
                                                                     <div class="text-danger small mt-1">
                                                                         {{ $message }}</div>
                                                                 @enderror
+
+                                                                {{-- Branch dropdown --}}
+                                                                <div class="mt-2">
+                                                                    <label for="branch_{{ $item->course_id }}"
+                                                                        class="form-label">Branch</label>
+                                                                    <select
+                                                                        name="courses[{{ $item->course_id }}][branch_id]"
+                                                                        id="branch_{{ $item->course_id }}"
+                                                                        class="form-select">
+                                                                        <option value="" disabled
+                                                                            {{ $oldBranch ? '' : 'selected' }}>--
+                                                                            Select Branch --</option>
+                                                                        @foreach ($branch ?? [] as $b)
+                                                                            <option value="{{ $b->branch_id }}"
+                                                                                {{ $oldBranch == $b->branch_id ? 'selected' : '' }}>
+                                                                                {{ $b->branch_name }}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                    @error("courses.$item->course_id.branch_id")
+                                                                        <div class="text-danger small mt-1">
+                                                                            {{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 @endforeach
+
+
                                             </div>
                                         </div>
 
                                         {{-- Tiny JS: enable/disable track radios based on checkbox --}}
                                         <script>
                                             document.addEventListener('DOMContentLoaded', function() {
-                                                function toggleTrackGroup(checkbox) {
+                                                function toggleTrackBranchGroup(checkbox) {
                                                     const targetSel = checkbox.getAttribute('data-target');
                                                     const wrap = document.querySelector(targetSel);
                                                     if (!wrap) return;
 
-                                                    const radios = wrap.querySelectorAll('input[type="radio"]');
+                                                    const inputs = wrap.querySelectorAll('input[type="radio"], select');
                                                     if (checkbox.checked) {
-                                                        radios.forEach(r => {
-                                                            r.disabled = false;
-                                                            r.required = true;
+                                                        wrap.style.display = ''; // show
+                                                        inputs.forEach(el => {
+                                                            el.disabled = false;
+                                                            el.required = true;
                                                         });
                                                     } else {
-                                                        radios.forEach(r => {
-                                                            r.checked = false;
-                                                            r.disabled = true;
-                                                            r.required = false;
+                                                        wrap.style.display = 'none'; // hide
+                                                        inputs.forEach(el => {
+                                                            if (el.type === 'radio') el.checked = false;
+                                                            if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                                                            el.disabled = true;
+                                                            el.required = false;
                                                         });
                                                     }
                                                 }
 
                                                 document.querySelectorAll('.course-checkbox').forEach(cb => {
-                                                    // init on load
-                                                    toggleTrackGroup(cb);
-                                                    // toggle on change
-                                                    cb.addEventListener('change', () => toggleTrackGroup(cb));
+                                                    toggleTrackBranchGroup(cb); // init on load
+                                                    cb.addEventListener('change', () => toggleTrackBranchGroup(cb));
                                                 });
                                             });
                                         </script>
@@ -566,7 +588,8 @@
 
 
 
-                                        <div class="col-12 col-md-4">
+
+                                        {{-- <div class="col-12 col-md-4">
                                             <label for="branch_id" class="form-label required">Branch</label>
                                             <select name="branch_id" id="branch_id" class="form-select" required>
                                                 <option value="" disabled
@@ -580,9 +603,9 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                        </div>
+                                        </div> --}}
 
-                                        <div class="col-12 col-md-6">
+                                        <div class="col-12 col-md-4">
                                             <label for="preferred_class" class="form-label required">Preferred
                                                 class</label>
                                             <select name="preferred_class" id="preferred_class" class="form-control"
@@ -590,9 +613,9 @@
                                                 <option value="" disabled
                                                     {{ old('preferred_class') ? '' : 'selected' }}>
                                                     -- Select Preferred class --</option>
-                                                <option value="a weekday class"
-                                                    {{ old('preferred_class') == 'a weekday class' ? 'selected' : '' }}>
-                                                    A weekday class</option>
+                                                <option value="weekday class"
+                                                    {{ old('preferred_class') == 'weekday class' ? 'selected' : '' }}>
+                                                    Weekday class</option>
                                                 <option value="weekend class"
                                                     {{ old('preferred_class') == 'weekend class' ? 'selected' : '' }}>
                                                     Weekend class (Saturday / Sunday)</option>
@@ -602,18 +625,6 @@
                                             </select>
                                         </div>
 
-
-                                        {{-- <div class="col-12 col-md-4">
-                      <label for="batch_id" class="form-label required">Batch</label>
-                      <select name="batch_id" id="batch_id" class="form-select" required>
-                        <option value="" disabled {{ old('batch_id') ? '' : 'selected' }}>-- Select Batch --</option>
-                        @foreach ($batch ?? [] as $item)
-                          <option value="{{ $item->batch_id }}" {{ old('batch_id') == $item->batch_id ? 'selected' : '' }}>
-                            {{ $item->batch_no }}
-                          </option>
-                        @endforeach
-                      </select>
-                    </div> --}}
                                     </div>
                                 </div>
 
@@ -623,6 +634,15 @@
                                 </div>
                                 @if ($errors->any())
                                     <div class="alert alert-danger mt-3">
+                                        <ul class="mb-0">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                                @if ($errors->any())
+                                    <div class="alert alert-danger">
                                         <ul class="mb-0">
                                             @foreach ($errors->all() as $error)
                                                 <li>{{ $error }}</li>
