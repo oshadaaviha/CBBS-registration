@@ -115,6 +115,7 @@ class StudentController extends Controller
             ->leftJoin('branches', 'enrollments.branch_id', '=', 'branches.branch_id')
             ->leftJoin('batches', 'enrollments.batch_id', '=', 'batches.batch_id')
             ->whereNull('enrollments.batch_id') // or any other pending condition
+            ->orderByDesc('enrollments.created_at')
             ->select([
                 'enrollments.id as enrollment_id',
                 'enrollments.course_id',

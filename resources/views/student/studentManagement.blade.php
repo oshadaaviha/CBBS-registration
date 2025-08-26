@@ -134,60 +134,64 @@
                                                     </thead>
                                                     <tbody>
                                                         @forelse ($data as $row)
-                                                            <tr>
-                                                                {{-- you selected s.student_id as public_student_id --}}
-                                                                <td>{{ $row->public_student_id }}</td>
+                                                            @if (!empty($row->public_student_id) && !empty($row->batch_no))
+                                                                <tr>
+                                                                    {{-- you selected s.student_id as public_student_id --}}
+                                                                    <td>{{ $row->public_student_id }}</td>
 
-                                                                <td>{{ $row->first_name }}</td>
-                                                                <td>{{ $row->last_name }}</td>
-                                                                <td>{{ $row->nic_number }}</td>
-                                                                <td>{{ $row->email }}</td>
-                                                                <td>{{ $row->gender }}</td>
-                                                                <td>{{ $row->mobile }}</td>
-                                                                <td>{{ $row->whatsapp }}</td>
-                                                                <td>{{ $row->contact_address }}</td>
+                                                                    <td>{{ $row->first_name }}</td>
+                                                                    <td>{{ $row->last_name }}</td>
+                                                                    <td>{{ $row->nic_number }}</td>
+                                                                    <td>{{ $row->email }}</td>
+                                                                    <td>{{ $row->gender }}</td>
+                                                                    <td>{{ $row->mobile }}</td>
+                                                                    <td>{{ $row->whatsapp }}</td>
+                                                                    <td>{{ $row->contact_address }}</td>
 
-                                                                {{-- you selected ba.batch_no --}}
-                                                                <td>{{ $row->batch_no ?? '-' }}</td>
-                                                                <td>{{ $row->course_label }}</td> {{-- from COALESCE(c.course_name, enrollments.course_id) as course_label --}}
-                                                                <td>{{ $row->branch_name ?? '-' }}</td>
-                                                                <td>{{ $row->track ?? ($row->is_fast_track ? 'Fast' : 'Normal') }}
-                                                                </td>
+                                                                    {{-- you selected ba.batch_no --}}
+                                                                    <td>{{ $row->batch_no ?? '-' }}</td>
+                                                                    <td>{{ $row->course_label }}</td>
+                                                                    {{-- from COALESCE(c.course_name, enrollments.course_id) as course_label --}}
+                                                                    <td>{{ $row->branch_name ?? '-' }}</td>
+                                                                    <td>{{ $row->track ?? ($row->is_fast_track ? 'Fast' : 'Normal') }}
+                                                                    </td>
 
 
-                                                                <td>
-                                                                    <button
-                                                                        class="btn btn-outline-info btn-sm waves-effect waves-light"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#studentEditModal"
-                                                                        {{-- pass values into the modal --}}
-                                                                        data-studentid="{{ $row->public_student_id }}"
-                                                                        data-firstname="{{ $row->first_name }}"
-                                                                        data-lastname="{{ $row->last_name }}"
-                                                                        data-nic="{{ $row->nic_number }}"
-                                                                        data-email="{{ $row->email }}"
-                                                                        data-gender="{{ $row->gender }}"
-                                                                        data-contactnumber="{{ $row->mobile }}"
-                                                                        data-whatsappnumber="{{ $row->whatsapp }}"
-                                                                        data-address="{{ $row->contact_address }}"
-                                                                        data-batchid="{{ $row->batch_id }}">
-                                                                        Edit
-                                                                    </button>
+                                                                    <td>
+                                                                        <button
+                                                                            class="btn btn-outline-info btn-sm waves-effect waves-light"
+                                                                            data-bs-toggle="modal"
+                                                                            data-bs-target="#studentEditModal"
+                                                                            {{-- pass values into the modal --}}
+                                                                            data-studentid="{{ $row->public_student_id }}"
+                                                                            data-firstname="{{ $row->first_name }}"
+                                                                            data-lastname="{{ $row->last_name }}"
+                                                                            data-nic="{{ $row->nic_number }}"
+                                                                            data-email="{{ $row->email }}"
+                                                                            data-gender="{{ $row->gender }}"
+                                                                            data-contactnumber="{{ $row->mobile }}"
+                                                                            data-whatsappnumber="{{ $row->whatsapp }}"
+                                                                            data-address="{{ $row->contact_address }}"
+                                                                            data-batchid="{{ $row->batch_id }}">
+                                                                            Edit
+                                                                        </button>
 
-                                                                    {{-- use the primary key alias you selected: student_pk --}}
-                                                                    <a href="{{ url('/deleteStudent/' . $row->student_pk) }}"
-                                                                        class="btn btn-outline-danger btn-sm waves-effect waves-light"
-                                                                        onclick="return confirm('Are you sure you want to delete this student?')">
-                                                                        Delete
-                                                                    </a>
-                                                                </td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="10" class="text-center">No records found.
-                                                                </td>
-                                                            </tr>
-                                                        @endforelse
+                                                                        {{-- use the primary key alias you selected: student_pk --}}
+                                                                        <a href="{{ url('/deleteStudent/' . $row->student_pk) }}"
+                                                                            class="btn btn-outline-danger btn-sm waves-effect waves-light"
+                                                                            onclick="return confirm('Are you sure you want to delete this student?')">
+                                                                            Delete
+                                                                        </a>
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="10" class="text-center">No records
+                                                                        found.
+                                                                    </td>
+                                                                </tr>
+                                                            @endforelse
                                                     </tbody>
 
                                                 </table>
