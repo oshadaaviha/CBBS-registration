@@ -294,6 +294,14 @@
             </aside>
 
             {{-- ===== RIGHT FORM ===== --}}
+
+            {{-- @if ($sharedBy)
+                <div class="alert alert-info d-flex align-items-center gap-2 mb-3" role="alert">
+                    <span class="badge bg-primary">Shared by</span>
+                    <strong>{{ $sharedBy->name }}</strong>
+                    <span class="text-muted">({{ $sharedBy->email }})</span>
+                </div>
+            @endif --}}
             <section class="col-12 col-lg-7 d-flex align-items-start justify-content-center">
                 <div class="container py-4 py-lg-5 form-wrap">
                     <div class="card card-modern">
@@ -314,6 +322,14 @@
                                 @csrf
                                 {{-- <input type="hidden" name="name" id="nameHidden" value=""> --}}
 
+                                @if ($sharedBy)
+                                    <div class="alert alert-info mb-3">
+                                        <strong>Shared by :</strong> {{ $sharedBy->name }} <span
+                                            class="text-muted"><strong>Contact :</strong>{{ $sharedBy->contact }}</span>
+                                    </div>
+                                    <input type="hidden" name="user_id" value="{{ $sharedBy->id }}">
+                                @endif
+
                                 {{-- Personal Details --}}
                                 <div class="section">
                                     <h6 class="section-title">Personal Details</h6>
@@ -325,24 +341,24 @@
                                         <div class="col-12 col-md-6">
                                             <label for="first_name" class="form-label required">First Name</label>
                                             <input type="text" id="first_name" name="first_name" class="form-control"
-                                                 value="{{ old('first_name') }}">
+                                                value="{{ old('first_name') }}">
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <label for="last_name" class="form-label required">Last Name</label>
                                             <input type="text" id="last_name" name="last_name" class="form-control"
-                                                 value="{{ old('last_name') }}">
+                                                value="{{ old('last_name') }}">
                                         </div>
 
 
                                         <div class="col-12 col-md-6">
                                             <label for="citizenship" class="form-label required">Citizenship</label>
                                             <input type="text" name="citizenship" id="citizenship"
-                                                class="form-control"  value="{{ old('citizenship') }}">
+                                                class="form-control" value="{{ old('citizenship') }}">
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <label for="nic_number" class="form-label required">NIC Number</label>
-                                            <input type="text" name="nic_number" id="nic_number" class="form-control"
-                                                 placeholder="199012345678 or 901234567V"
+                                            <input type="text" name="nic_number" id="nic_number"
+                                                class="form-control" placeholder="199012345678 or 901234567V"
                                                 pattern="^(\d{9}[VvXx]|\d{12})$" value="{{ old('nic_number') }}">
                                         </div>
 
@@ -350,7 +366,7 @@
                                             <label for="certificate_name" class="form-label required">Name on
                                                 Certificate</label>
                                             <input type="text" name="certificate_name" id="certificate_name"
-                                                class="form-control"  value="{{ old('certificate_name') }}">
+                                                class="form-control" value="{{ old('certificate_name') }}">
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <label for="gender" class="form-label required">Gender</label>
@@ -374,8 +390,8 @@
                                         <div class="col-12 col-md-4">
                                             <label for="mobile" class="form-label required">Mobile Number</label>
                                             <input type="text" name="mobile" id="mobile" class="form-control"
-                                             placeholder="+9471XXXXXXX or 071XXXXXXX"
-                                                pattern="^(?:\+94|0)?7\d{8}$" value="{{ old('mobile') }}">
+                                                placeholder="+9471XXXXXXX or 071XXXXXXX" pattern="^(?:\+94|0)?7\d{8}$"
+                                                value="{{ old('mobile') }}">
                                         </div>
                                         <div class="col-12 col-md-4">
                                             <label for="whatsapp" class="form-label required">WhatsApp Number</label>
@@ -415,8 +431,7 @@
                                         <div class="col-12 col-md-6">
                                             <label for="education_level" class="form-label required">Education
                                                 Level</label>
-                                            <select name="education_level" id="education_level" class="form-control"
-                                                >
+                                            <select name="education_level" id="education_level" class="form-control">
                                                 <option value="" disabled
                                                     {{ old('education_level') ? '' : 'selected' }}>
                                                     -- Select Education Level --</option>

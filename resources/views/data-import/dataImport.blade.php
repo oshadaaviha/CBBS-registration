@@ -133,9 +133,10 @@
 
                                     <p class="mb-1">Or copy link</p>
                                     <div class="input-group">
+                                        @php $shareUrl = route('students.publicForm', ['ref' => Auth::id()]); @endphp
                                         <input type="text" id="shareLink" class="form-control"
-                                            value="{{ route('students.publicForm') }}" readonly>
-                                        <button class="btn btn-primary" id="copyBtn">Copy</button>
+                                            value="{{ $shareUrl }}" readonly>
+                                        <button class="btn btn-primary" id="copyBtn" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#shareModal">Copy</button>
                                     </div>
                                 </div>
                             </div>
@@ -530,6 +531,18 @@
         color: #007bff;
     }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const shareUrl = @json($shareUrl);
+    document.getElementById("fbShare").href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    document.getElementById("twShare").href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`;
+    document.getElementById("igShare").href = `https://www.instagram.com/?url=${encodeURIComponent(shareUrl)}`;
+    document.getElementById("waShare").href = `https://wa.me/?text=${encodeURIComponent(shareUrl)}`;
+    document.getElementById("tgShare").href = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}`;
+    document.getElementById("copyBtn").addEventListener("click", () => navigator.clipboard.writeText(shareUrl).then(() => alert("Link copied to clipboard!")));
+});
+</script>
 
 
 <script>

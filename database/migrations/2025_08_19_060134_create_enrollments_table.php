@@ -43,6 +43,9 @@ return new class extends Migration {
             $table->foreign('batch_id')
                   ->references('batch_id')->on('batches');
 
+            $table->unsignedBigInteger('user_id')->nullable()->after('student_id');
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+
             // Optional uniqueness to avoid duplicate exact enrollments
             // $table->unique(['student_id','course_id','branch_id','batch_id']);
         });
@@ -50,7 +53,11 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('enrollments');
+        // Schema::dropIfExists('enrollments');
+        Schema::table('enrollments', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
+            $table->dropColumn('user_id');
+        });
     }
 };
 

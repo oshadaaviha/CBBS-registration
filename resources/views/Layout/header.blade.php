@@ -76,7 +76,7 @@
                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <img class="rounded-circle header-profile-user" src="assets/images/users/user.jpeg"
                          alt="Header Avatar">
-                         {{-- <span class="d-none d-xl-inline-block ms-1" key="t-henry">{{\Illuminate\Support\Facades\Auth::user()->name}}</span> --}}
+                         <span class="d-none d-xl-inline-block ms-1" key="t-henry">{{\Illuminate\Support\Facades\Auth::user()->name}}</span>
 {{--                    <span class="d-none d-xl-inline-block ms-1" key="t-henry">{{\Illuminate\Support\Facades\Auth::user()->name}}</span>--}}
                     <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                 </button>

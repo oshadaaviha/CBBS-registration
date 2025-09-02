@@ -75,20 +75,31 @@ class UserController extends Controller
     {
 
         // isactive 1
-        $data = User::where('isActive', 1)->get();
+        // $data = User::where('isActive', 1)->get();
+
+        $data = \App\Models\User::query()
+            ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+            ->select('users.*', 'branches.branch_name as branchName')
+            ->get();
+
+        $branch = \App\Models\Branch::where('isActive', 1)->get();
 
         // dd($data);
-        return view('user.userManagement', compact('data'));
+        return view('user.userManagement', compact('data', 'branch'));
     }
     public function AddUser(Request $request)
     {
-
+        // $data = \App\Models\User::query()
+        //     ->leftJoin('branches', 'users.branch_id', '=', 'branches.branch_id')
+        //     ->select('users.*', 'branches.branch_name as branchName')
+        //     ->get();
         $request->validate([
+
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'contact' => 'required|digits:10',
             'password' => 'required|string|min:5',
-            'role' => 'required|string|in:Admin,Sales,Manager',
+            'role' => 'required|string|in:Admin,Sales,Manager,Director',
         ]);
 
         $user = new User;
@@ -98,7 +109,13 @@ class UserController extends Controller
         $user->contact = $request->contact;
         $user->password = Hash::make($request->password);
         $user->role = $request->role;
+
         $user->isActive = 1;
+
+
+        if ($request->branch_id) {
+            $user->branch_id = $request->branch_id;
+        }
 
 
         $user->save();
@@ -109,22 +126,13 @@ class UserController extends Controller
     {
         return view('user.changePassword')->with('id', $id);
     }
-    public function ChangePassword(Request $request)
+    public function ResetPassword(Request $request, $id)
     {
-        $request->validate([
-            'password' => 'required|string|min:5|confirmed',
-        ]);
-
-        try {
-            $user = User::findOrFail($request->id);
-            $user->password = Hash::make($request->password);
-            $user->save();
-
-            return redirect()->back()->with('message', 'Password changed successfully.');
-        } catch (Exception $e) {
-            app(ErrorLogController::class)->ShowError($e);
-            return redirect()->back()->with('error', 'Something went wrong. Please try again');
-        }
+        $request->validate(['pwd' => 'required|string|min:5']);
+        $user = User::findOrFail($id);
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->pwd);
+        $user->save();
+        return back()->with('message', 'Password reset successfully.');
     }
     public function DisableUser($id)
     {

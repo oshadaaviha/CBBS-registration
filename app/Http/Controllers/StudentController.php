@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Auth;
 
 
 class StudentController extends Controller
@@ -34,6 +35,7 @@ class StudentController extends Controller
             'email'             => 'nullable|email',
             'mobile'            => 'nullable|string',
             'whatsapp'          => 'nullable|string',
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
 
             // global preferred_class (if you keep it)
             'preferred_class'   => ['nullable', Rule::in([
@@ -85,6 +87,7 @@ class StudentController extends Controller
 
 
             $preferredClass = $request->preferred_class;
+            $userId = $request->input('user_id'); // may be null
 
             // Insert one enrollment per selected course
             foreach ($selectedCourses as $courseId => $c) {
@@ -99,17 +102,21 @@ class StudentController extends Controller
                         : ($c['track'] ?? '') === 'Fast',
                     'preferred_class' => $preferredClass,
                     'status'          => 'registered',
+                    'user_id'         => $userId,
                 ]);
             }
 
 
-            return back()->with('success', 'Registration saved successfully with per-course enrollments!');
+            return back()->with('success', 'Registration saved successfully!');
         });
     }
 
     public function pendingStudents()
     {
+
+        $user = Auth::user();
         $pending = \App\Models\Enrollment::query()
+            ->visibleTo($user)
             ->join('students', 'enrollments.student_id', '=', 'students.id')
             ->leftJoin('courses', 'enrollments.course_id', '=', 'courses.course_id')
             ->leftJoin('branches', 'enrollments.branch_id', '=', 'branches.branch_id')
@@ -133,6 +140,10 @@ class StudentController extends Controller
                 'students.mobile',
                 'students.whatsapp',
                 'students.email',
+                'students.contact_address',
+                'students.permanent_address',
+                'enrollments.track',
+                'enrollments.is_fast_track',
                 'branches.branch_name',
                 'batches.batch_no',
             ])
@@ -146,11 +157,17 @@ class StudentController extends Controller
 
     public function studentManagement()
     {
+
+        $user = Auth::user();
+
         $data = Enrollment::query()
+            ->visibleTo($user)
             ->join('students as s', 'enrollments.student_id', '=', 's.id')
             ->leftJoin('branches as br', 'enrollments.branch_id', '=', 'br.branch_id')
             ->leftJoin('courses  as c',  'enrollments.course_id',  '=', 'c.course_id')
             ->leftJoin('batches  as ba', 'enrollments.batch_id',  '=', 'ba.batch_id')
+            ->leftJoin('users as u', 'enrollments.user_id', '=', 'u.id')
+            ->addSelect('u.name as shared_by_name')
             ->select([
                 'enrollments.id as enrollment_id',
                 'enrollments.course_id',
@@ -175,6 +192,7 @@ class StudentController extends Controller
                 DB::raw("COALESCE(c.course_name, enrollments.course_id) as course_label"),
                 'br.branch_name',
                 'ba.batch_no',
+                DB::raw('u.name as shared_by_name'),
             ])
             ->where('s.isActive', 1)
             ->orderBy('course_label')
@@ -194,6 +212,7 @@ class StudentController extends Controller
 
         // PENDING: no batch or blank-ish student_id
         $pending = Enrollment::query()
+            ->visibleTo($user)
             ->join('students as s', 'enrollments.student_id', '=', 's.id')
             ->leftJoin('courses  as c',  function ($j) {
                 $j->on(DB::raw("enrollments.course_id COLLATE utf8mb4_unicode_ci"),  '=', DB::raw("c.course_id COLLATE utf8mb4_unicode_ci"));
@@ -228,12 +247,19 @@ class StudentController extends Controller
                     ->orWhereRaw("NULLIF(TRIM(s.student_id), '') IS NULL")       // NULL / '' / spaces
                     ->orWhereIn(DB::raw('LOWER(TRIM(s.student_id))'), ['0', 'n/a', 'na', '-']); // common placeholders
             })
+            // ->when(!Auth::user()->hasAnyRole(['Admin', 'Director']), function ($q) {
+            //     $q->where(function ($inner) {
+            //         $inner->where('enrollments.user_id', Auth::id())
+            //             ->orWhere('enrollments.branch_id', Auth::user()->branch_id); // if you store this on users
+            //     });
+            // })
             ->orderBy('course_label')
             ->orderBy('s.first_name')
             ->get();
 
         // OPTIONAL: full list by course (for “All students by course” table)
         $all = Enrollment::query()
+            ->visibleTo($user)
             ->join('students as s', 'enrollments.student_id', '=', 's.id')
             ->leftJoin('courses  as c',  function ($j) {
                 $j->on(DB::raw("enrollments.course_id COLLATE utf8mb4_unicode_ci"),  '=', DB::raw("c.course_id COLLATE utf8mb4_unicode_ci"));
@@ -269,6 +295,8 @@ class StudentController extends Controller
         $branch = Branch::where('isActive', 1)->get();
         $course = Course::where('isActive', 1)->get();
         $batch  = Batch::where('isActive', 1)->get();
+
+
 
         return view('student.studentManagement', compact('data', 'branch', 'course', 'batch', 'enrollmentsByStudent', 'pending', 'all'));
     }
@@ -310,14 +338,19 @@ class StudentController extends Controller
         return back()->with('success', 'Student updated successfully.');
     }
 
-    public function publicForm()
+    public function publicForm(Request $request)
     {
         $course = Course::where('isActive', 1)->get();
         $branch = Branch::where('isActive', 1)->get();
         $batch = Batch::where('isActive', 1)->get();
 
+
+        $refId    = (int) $request->query('ref');   // e.g. ?ref=123
+        $sharedBy = $refId ? \App\Models\User::find($refId) : null;
+
+
         // Return the same form but with certain fields hidden
-        return view('student.studentRegistrationPublic', compact('course', 'branch', 'batch'));
+        return view('student.studentRegistrationPublic', compact('course', 'branch', 'batch', 'sharedBy', 'refId', 'request'));
     }
 
     public function assignBatch(Request $request)

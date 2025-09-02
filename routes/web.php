@@ -40,9 +40,11 @@ Route::get('/changePasswordView{id}', [UserController::class, 'ChangePasswordVie
 Route::post('/changePassword', [UserController::class, 'ChangePassword']);
 Route::get('/editProfileView{id}', [UserController::class, 'EditProfileView']);
 Route::post('/editProfile', [UserController::class, 'EditProfile']);
-Route::post('/resetPassword', [UserController::class, 'ResetPassword']);
+// Route::post('/resetPassword', [UserController::class, 'ResetPassword'])->name('users.resetPassword');
 // Route::get('/disableUser{id}',[UserController::class,'DisableUser']);
 Route::get('/disableUser/{id}', [UserController::class, 'DisableUser']);
+Route::post('/users/{id}/password', [UserController::class, 'ResetPassword'])->name('users.resetPassword');
+
 
 Route::post('/students/store', [StudentController::class, 'storeStudent'])->name('students.store');
 Route::get('/pendingStudents', [StudentController::class, 'pendingStudents'])->name('students.pending');

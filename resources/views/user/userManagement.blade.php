@@ -104,7 +104,7 @@
                                                             <th>Email</th>
                                                             <th>Contact</th>
                                                             <th>Role</th>
-                                                            {{-- <th>Branch</th> --}}
+                                                            <th>Branch</th>
                                                             <th></th>
                                                             <th></th>
 
@@ -122,7 +122,7 @@
                                                                             <td>{{ $item->email }}</td>
                                                                             <td>{{ $item->contact }}</td>
                                                                             <td>{{ $item->role }}</td>
-                                                                            {{-- <td>{{$item->branchName}}</td> --}}
+                                                                            <td>{{$item->branchName}}</td>
 
                                                                             <td><a href="{{ url('disableUser') . $item->id }}"
                                                                                     class="btn btn-outline-warning btn-sm waves-effect waves-light">Disable
@@ -177,42 +177,57 @@
                                         aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <form id="addUserForm" action="{{ url('addUser') }}" method="post" enctype="multipart/form-data">
+                                    <form id="addUserForm" action="{{ url('addUser') }}" method="post"
+                                        enctype="multipart/form-data">
                                         {{ csrf_field() }}
                                         <div class="mb-3">
                                             <label for="" class="form-label">Name</label>
                                             <input type="text" class="form-control" id="name" name="name"
                                                 required>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email"
-                                                required>
-                                                <span class="error text-danger small" id="email_error"></span>
 
-                                        </div>
                                         <div class="mb-3">
                                             <label for="contact" class="form-label">Contact Number</label>
                                             <input type="number" class="form-control" id="contact" name="contact"
                                                 required>
-                                                <span class="error text-danger small" id="contact_error"></span>
-
+                                            <span class="error text-danger small" id="contact_error"></span>
                                         </div>
 
-                                        <div class="mb-3">
-                                            <label for="" class="form-label">Password</label>
-                                            <input type="password" class="form-control" id="password" name="password"
-                                                required>
-                                        </div>
                                         <div class="mb-3">
                                             <label for="" class="form-label">Role</label>
                                             <select name="role" id="role" class="form-select">
                                                 <option value="Admin">Admin</option>
+                                                <option value="Director">Director</option>
                                                 <option value="Manager">Manager</option>
                                                 <option value="Sales">Sales</option>
                                             </select>
                                         </div>
 
+
+                                        <div class="mb-3">
+                                            <label for="branch" class="form-label">Branch</label>
+                                            <select class="form-select" name="branch_id" id="assign_branch_id">
+                                                <option value="" disabled selected>-- Select Branch --</option>
+                                                @foreach ($branch ?? [] as $bra)
+                                                    <option value="{{ $bra->branch_id }}">{{ $bra->branch_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" name="email"
+                                                required>
+                                            <span class="error text-danger small" id="email_error"></span>
+
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="" class="form-label">Password</label>
+                                            <input type="password" class="form-control" id="password"
+                                                name="password" required>
+                                        </div>
 
                                         <div class="mb-3">
                                             <button type="submit"
@@ -243,7 +258,7 @@
                                 </div>
                                 <div class="modal-body">
                                     <form action="{{ url('resetPassword') }}" method="post"
-                                        enctype="multipart/form-data">
+                                        enctype="multipart/form-data" id="resetPasswordForm">
                                         {{ csrf_field() }}
                                         <input type="text" class="form-control" id="id" name="id"
                                             hidden required>
@@ -307,72 +322,80 @@
             });
         </script>
         <script>
-             document.addEventListener('DOMContentLoaded', function () {
-                    // List of forms to handle
-                    const forms = ['addUserForm'];
-              // Error messages
-              const errors = {
+            document.addEventListener('DOMContentLoaded', function() {
+                // List of forms to handle
+                const forms = ['addUserForm'];
+                // Error messages
+                const errors = {
 
-                        contact: 'Contact Number is required in the correct Sri Lankan format.',
+                    contact: 'Contact Number is required in the correct Sri Lankan format.',
 
-                    };
-            forms.forEach((formId) => {
-                const form = document.getElementById(formId);
-                if (form) {
-                    const submitButton = form.querySelector('button[type="submit"]');
-                    const inputs = form.querySelectorAll('input, select');
+                };
+                forms.forEach((formId) => {
+                    const form = document.getElementById(formId);
+                    if (form) {
+                        const submitButton = form.querySelector('button[type="submit"]');
+                        const inputs = form.querySelectorAll('input, select');
 
-                    // Add input listeners for each field
-                    inputs.forEach(input => {
-                        input.addEventListener('input', () => {
-                            validateField(formId, input);
-                            validateForm(form, submitButton);
+                        // Add input listeners for each field
+                        inputs.forEach(input => {
+                            input.addEventListener('input', () => {
+                                validateField(formId, input);
+                                validateForm(form, submitButton);
+                            });
                         });
-                    });
 
-                    // Validate individual field
-                    function validateField(formId, field) {
-                        const errorElementId = `${field.id}_error`;
-                        const errorElement = document.getElementById(errorElementId);
+                        // Validate individual field
+                        function validateField(formId, field) {
+                            const errorElementId = `${field.id}_error`;
+                            const errorElement = document.getElementById(errorElementId);
 
-                        if (!field.value.trim()) {
-                            errorElement.textContent = errors[field.id];
-                            field.classList.add('is-invalid');
-                        } else if (field.id.endsWith('email') && !validateEmail(field.value)) {
-                            errorElement.textContent = errors[field.id];
-                            field.classList.add('is-invalid');
-                        } else if ((field.id.endsWith('contact')) && !validateSriLankanPhone(field.value)) {
-                            errorElement.textContent = errors[field.id];
-                            field.classList.add('is-invalid');
-                        } else {
-                            errorElement.textContent = '';
-                            field.classList.remove('is-invalid');
+                            if (!field.value.trim()) {
+                                errorElement.textContent = errors[field.id];
+                                field.classList.add('is-invalid');
+                            } else if (field.id.endsWith('email') && !validateEmail(field.value)) {
+                                errorElement.textContent = errors[field.id];
+                                field.classList.add('is-invalid');
+                            } else if ((field.id.endsWith('contact')) && !validateSriLankanPhone(field.value)) {
+                                errorElement.textContent = errors[field.id];
+                                field.classList.add('is-invalid');
+                            } else {
+                                errorElement.textContent = '';
+                                field.classList.remove('is-invalid');
+                            }
                         }
+
+                        // Validate the entire form
+                        function validateForm(form, submitButton) {
+                            const invalidFields = form.querySelectorAll('.is-invalid');
+                            submitButton.disabled = invalidFields.length !== 0;
+                        }
+
+                        // Email validation
+                        function validateEmail(email) {
+                            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            return re.test(email);
+                        }
+
+                        // Phone validation
+                        function validateSriLankanPhone(phone) {
+                            const sriLankanMobilePattern = /^07[0-9]{8}$/; // Mobile numbers
+                            const sriLankanLandlinePattern = /^0\d{2}\d{7}$/; // Landline numbers
+                            return sriLankanMobilePattern.test(phone) || sriLankanLandlinePattern.test(phone);
+                        }
+
+
                     }
-
-                    // Validate the entire form
-                    function validateForm(form, submitButton) {
-                        const invalidFields = form.querySelectorAll('.is-invalid');
-                        submitButton.disabled = invalidFields.length !== 0;
-                    }
-
-                    // Email validation
-                    function validateEmail(email) {
-                        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        return re.test(email);
-                    }
-
-                    // Phone validation
-                    function validateSriLankanPhone(phone) {
-                        const sriLankanMobilePattern = /^07[0-9]{8}$/; // Mobile numbers
-                        const sriLankanLandlinePattern = /^0\d{2}\d{7}$/; // Landline numbers
-                        return sriLankanMobilePattern.test(phone) || sriLankanLandlinePattern.test(phone);
-                    }
-
-
-                }
+                });
             });
-        });
+        </script>
+        <script>
+            document.getElementById('resetPassword')
+                .addEventListener('show.bs.modal', function(event) {
+                    const id = event.relatedTarget.getAttribute('data-id');
+                    this.querySelector('#id').value = id;
+                    document.getElementById('resetPasswordForm').action = "{{ url('/users') }}/" + id + "/password";
+                });
         </script>
 
         </html>

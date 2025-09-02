@@ -128,6 +128,7 @@
                                                             <th>Course</th>
                                                             <th>Branch</th>
                                                             <th>Track</th>
+                                                            <th>Shared By</th>
                                                             {{-- <th>Is Fast Track</th> --}}
                                                             <th>Action</th>
                                                         </tr>
@@ -155,6 +156,7 @@
                                                                     <td>{{ $row->branch_name ?? '-' }}</td>
                                                                     <td>{{ $row->track ?? ($row->is_fast_track ? 'Fast' : 'Normal') }}
                                                                     </td>
+                                                                    <td>{{ $row->shared_by_name ?? '-' }}</td>
 
 
                                                                     <td>

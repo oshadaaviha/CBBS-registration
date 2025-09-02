@@ -21,7 +21,8 @@ class CreateUsersTable extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-     
+            $table->foreignId('batch_id')->nullable()->constrained('batches');
+
             $table->boolean('isActive')->default('1');
 
             $table->timestamps();

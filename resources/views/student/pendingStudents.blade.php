@@ -141,8 +141,7 @@
                                                                 <td>{{ $row->contact_address }}</td>
                                                                 <td>{{ $row->course_label }}</td>
                                                                 <td>{{ $row->branch_name ?? '-' }}</td>
-                                                                <td>{{ $row->track ?? ($row->is_fast_track ? 'Fast' : 'Normal') }}
-                                                                </td>
+                                                                <td>{{ $row->track ?? ($row->is_fast_track ? 'Fast' : 'Normal') }}</td>
                                                                 <td>
                                                                     <button type="button"
                                                                         class="btn btn-sm btn-primary"
@@ -324,7 +323,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Student ID <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="student_id" id="assign_student_id"
-                                        placeholder="e.g. CBBS-2025-001">
+                                        placeholder="e.g. BCB/CW/111/01">
                                     <div class="form-text">Must be unique.</div>
                                 </div>
 
