@@ -212,8 +212,8 @@
                                                         <option {{ old('gender') == 'Female' ? 'selected' : '' }}>
                                                             Female
                                                         </option>
-                                                        <option {{ old('gender') == 'Other' ? 'selected' : '' }}>Other
-                                                        </option>
+                                                        {{-- <option {{ old('gender') == 'Other' ? 'selected' : '' }}>Other
+                                                        </option> --}}
                                                     </select>
                                                 </div>
 

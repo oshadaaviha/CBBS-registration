@@ -122,7 +122,7 @@
                                                                             <td>{{ $item->email }}</td>
                                                                             <td>{{ $item->contact }}</td>
                                                                             <td>{{ $item->role }}</td>
-                                                                            <td>{{$item->branchName}}</td>
+                                                                            <td>{{ $item->branchName }}</td>
 
                                                                             <td><a href="{{ url('disableUser') . $item->id }}"
                                                                                     class="btn btn-outline-warning btn-sm waves-effect waves-light">Disable
@@ -257,11 +257,9 @@
                                         aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <form action="{{ url('resetPassword') }}" method="post"
-                                        enctype="multipart/form-data" id="resetPasswordForm">
-                                        {{ csrf_field() }}
-                                        <input type="text" class="form-control" id="id" name="id"
-                                            hidden required>
+                                    <form id="resetPasswordForm" method="POST">
+                                        @csrf
+                                        <input type="text" id="id" name="id" hidden required>
 
                                         <div class="mb-3">
                                             <label for="" class="form-label">Enter Password</label>
@@ -312,7 +310,7 @@
 
             @include('Layout.appJs')
         </body>
-        <script>
+        {{-- <script>
             $('#resetPassword').on('show.bs.modal', function(event) {
                 let button = $(event.relatedTarget)
                 let id = button.data('id')
@@ -320,7 +318,22 @@
                 let modal = $(this)
                 modal.find('.modal-body #id').val(id);
             });
-        </script>
+        </script> --}}
+        {{-- <script>
+            document.getElementById('resetPassword')
+                .addEventListener('show.bs.modal', function(event) {
+                    const trigger = event.relatedTarget;
+                    const uid = trigger.getAttribute('data-id');
+
+                    // set hidden field
+                    this.querySelector('#id').value = uid;
+
+                    // set action to /users/{id}/password
+                    const form = document.getElementById('resetPasswordForm');
+                    form.action = "{{ url('/users') }}/" + uid + "/password";
+                });
+        </script> --}}
+
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // List of forms to handle
@@ -390,12 +403,14 @@
             });
         </script>
         <script>
-            document.getElementById('resetPassword')
-                .addEventListener('show.bs.modal', function(event) {
-                    const id = event.relatedTarget.getAttribute('data-id');
-                    this.querySelector('#id').value = id;
-                    document.getElementById('resetPasswordForm').action = "{{ url('/users') }}/" + id + "/password";
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('resetPassword').addEventListener('show.bs.modal', function(event) {
+                    const uid = event.relatedTarget.getAttribute('data-id');
+                    this.querySelector('#id').value = uid;
+                    document.getElementById('resetPasswordForm').action = "{{ url('/users') }}/" + uid +
+                        "/password";
                 });
+            });
         </script>
 
         </html>

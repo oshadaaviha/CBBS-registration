@@ -376,8 +376,8 @@
                                                 <option {{ old('gender') === 'Male' ? 'selected' : '' }}>Male</option>
                                                 <option {{ old('gender') === 'Female' ? 'selected' : '' }}>Female
                                                 </option>
-                                                <option {{ old('gender') === 'Other' ? 'selected' : '' }}>Other
-                                                </option>
+                                                {{-- <option {{ old('gender') === 'Other' ? 'selected' : '' }}>Other
+                                                </option> --}}
                                             </select>
                                         </div>
                                     </div>

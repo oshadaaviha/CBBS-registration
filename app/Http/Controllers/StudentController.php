@@ -10,6 +10,7 @@ use App\Models\Branch;
 use App\Models\Course;
 use App\Models\Batch;
 use App\Models\Enrollment;
+use App\Models\User;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -155,7 +156,7 @@ class StudentController extends Controller
         return view('student.pendingStudents', compact('pending', 'batch'));
     }
 
-    public function studentManagement()
+    public function studentManagement(Request $request)
     {
 
         $user = Auth::user();
@@ -296,9 +297,116 @@ class StudentController extends Controller
         $course = Course::where('isActive', 1)->get();
         $batch  = Batch::where('isActive', 1)->get();
 
+        // pass current filters to the view so UI can keep selections
+
+        // Read filters from query string
+        $filters = [
+            'course_id' => $request->query('course_id'),
+            'branch_id' => $request->query('branch_id'),
+            'batch_id'  => $request->query('batch_id'),
+            'track'     => $request->query('track'),
+            'student'   => $request->query('student'),
+            'shared_by' => $request->query('shared_by'), // pass a user_id here
+        ];
+
+        $query = \App\Models\Enrollment::query()
+            ->visibleTo($user)
+            ->join('students as s', 'enrollments.student_id', '=', 's.id')
+            ->leftJoin('courses as c', function ($j) {
+                $j->on(
+                    DB::raw("enrollments.course_id COLLATE utf8mb4_unicode_ci"),
+                    '=',
+                    DB::raw("c.course_id COLLATE utf8mb4_unicode_ci")
+                );
+            })
+            ->leftJoin('branches as br', function ($j) {
+                $j->on(
+                    DB::raw("enrollments.branch_id COLLATE utf8mb4_unicode_ci"),
+                    '=',
+                    DB::raw("br.branch_id COLLATE utf8mb4_unicode_ci")
+                );
+            })
+            ->leftJoin('batches as ba', function ($j) {
+                $j->on(
+                    DB::raw("enrollments.batch_id COLLATE utf8mb4_unicode_ci"),
+                    '=',
+                    DB::raw("ba.batch_id COLLATE utf8mb4_unicode_ci")
+                );
+            })
+            ->leftJoin('users as u', 'enrollments.user_id', '=', 'u.id')
+            ->select([
+                'enrollments.id as enrollment_id',
+                'enrollments.course_id',
+                'enrollments.branch_id',
+                'enrollments.batch_id',
+                'enrollments.track',
+                'enrollments.is_fast_track',
+                'enrollments.status as enrollment_status',
+
+                's.id as student_pk',
+                's.student_id as public_student_id',
+                's.first_name',
+                's.last_name',
+                's.nic_number',
+                's.email',
+                's.gender',
+                's.mobile',
+                's.whatsapp',
+                's.contact_address',
+                's.status as student_status',
+
+                DB::raw("COALESCE(c.course_name, enrollments.course_id) COLLATE utf8mb4_unicode_ci as course_label"),
+                'br.branch_name',
+                'ba.batch_no',
+                DB::raw('u.name as shared_by_name'),
+            ]);
+
+        // Apply filters
+        if (!empty($filters['course_id'])) {
+            $query->where('enrollments.course_id', $filters['course_id']);
+        }
+        if (!empty($filters['branch_id'])) {
+            $query->where('enrollments.branch_id', $filters['branch_id']);
+        }
+        if (!empty($filters['batch_id'])) {
+            $query->where('enrollments.batch_id', $filters['batch_id']);
+        }
+        if (!empty($filters['track'])) {
+            $query->where('enrollments.track', $filters['track']);
+        }
+        // Expecting shared_by to be a user_id. If you want to filter by name instead, change to where('u.name','like','%...%')
+        if (!empty($filters['shared_by'])) {
+            $query->where('enrollments.user_id', $filters['shared_by']);
+        }
+        // if (!empty($filters['student'])) {
+        //     $needle = '%' . $filters['student'] . '%';
+        //     $query->where(function ($q) use ($needle) {
+        //         $q->where('s.student_id', 'like', $needle)
+        //             ->orWhere('s.first_name', 'like', $needle)
+        //             ->orWhere('s.last_name', 'like', $needle)
+        //             ->orWhere('s.nic_number', 'like', $needle)
+        //             ->orWhere('s.mobile', 'like', $needle)
+        //             ->orWhere('s.email', 'like', $needle);
+        //     });
+        // }
+
+        $data = $query
+            ->where('s.isActive', 1)
+            ->orderBy('course_label')
+            ->orderByDesc('enrollments.created_at')
+            ->get();
+
+        $sharedByOptions = User::select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
 
-        return view('student.studentManagement', compact('data', 'branch', 'course', 'batch', 'enrollmentsByStudent', 'pending', 'all'));
+        // (keep the rest: $branch/$course/$batch/$sharedByOptions, view() call, etc.)
+
+
+
+
+        return view('student.studentManagement', compact('data', 'branch', 'course', 'batch', 'enrollmentsByStudent', 'pending', 'all', 'filters', 'sharedByOptions'));
     }
 
 

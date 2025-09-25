@@ -109,6 +109,22 @@
                     </a>
                 </li>
 
+                <li>
+                    <a href="{{url('/userActivityLog')}}" class="waves-effect bx-fade-right-hover">
+                        <i class="bx bx bxs-user"></i>
+                        <span key="t-dashboards">User Activity Log</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{url('/userAccessManagement')}}" class="waves-effect bx-fade-right-hover">
+                        <i class="bx bx bxs-user"></i>
+                        <span key="t-dashboards">User Access Management</span>
+                    </a>
+                </li>
+
+
+
 
                 @endif
 

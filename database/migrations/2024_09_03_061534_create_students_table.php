@@ -12,6 +12,7 @@ class CreateStudentsTable extends Migration
             $table->string('branch_id')->nullable()->change();
             $table->string('batch_id')->nullable()->change();
             $table->string('course_id')->nullable()->change();
+            $table->unique('student_id', 'students_student_id_unique');
 
             // Deprecated: student-wide fast-track.
             // Keep column but stop using it; per-enrollment has is_fast_track now.
@@ -21,6 +22,8 @@ class CreateStudentsTable extends Migration
 
     public function down(): void
     {
-        // no-op (or reverse if you really need)
+        Schema::table('students', function (Blueprint $table) {
+            $table->dropUnique('students_student_id_unique');
+        });
     }
 }

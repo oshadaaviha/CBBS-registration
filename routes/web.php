@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DataImportController;
+use App\Http\Controllers\UserAccessManagementController;
 use App\Models\Student;
 use Illuminate\Support\Facades\Route;
 
@@ -31,15 +32,20 @@ Route::get('/admin', function () {
 
 //User
 
+// routes/web.php
+Route::post('/users/{id}/password', [UserController::class, 'resetPassword'])->name('users.password.reset');
+
+
 Route::get('/dashboard', [UserController::class, 'Dashboard']);
 Route::get('/userManagement', [UserController::class, 'UserManagement']);
 Route::post('/addUser', [UserController::class, 'AddUser']);
 Route::post('/login', [UserController::class, 'Login']);
 Route::get('/logout', [UserController::class, 'Logout']);
+
 Route::get('/changePasswordView{id}', [UserController::class, 'ChangePasswordView']);
 Route::post('/changePassword', [UserController::class, 'ChangePassword']);
-Route::get('/editProfileView{id}', [UserController::class, 'EditProfileView']);
-Route::post('/editProfile', [UserController::class, 'EditProfile']);
+Route::get('/editProfileView/{id}', [UserController::class, 'EditProfileView']);
+Route::post('/editProfile/{id}', [UserController::class, 'EditProfile']);
 // Route::post('/resetPassword', [UserController::class, 'ResetPassword'])->name('users.resetPassword');
 // Route::get('/disableUser{id}',[UserController::class,'DisableUser']);
 Route::get('/disableUser/{id}', [UserController::class, 'DisableUser']);
@@ -122,3 +128,8 @@ Route::post('/students/assign-batch', [StudentController::class, 'assignBatch'])
     ->name('students.assignBatch');
 Route::post('/students/update-full', [StudentController::class, 'updateFull'])
     ->name('students.updateFull');
+
+Route::get('/userAccessManagement', [UserAccessManagementController::class, 'index']);
+// Route::put('/userAccessManagement/{user}', [UserAccessManagementController::class, 'update']);
+Route::put('/userAccessManagement/{id}', [UserAccessManagementController::class, 'update'])
+    ->name('userAccessManagement.update');

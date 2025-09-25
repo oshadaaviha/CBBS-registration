@@ -104,6 +104,94 @@
 
                             <br>
 
+                            {{-- Filters --}}
+                            <form method="GET" action="{{ url()->current() }}" class="row g-2 mb-3 align-items-end">
+                                <div class="col-md-2">
+                                    <label class="form-label">Course</label>
+                                    <select name="course_id" class="form-select">
+                                        <option value="">All</option>
+                                        @foreach ($course as $c)
+                                            <option value="{{ $c->course_id }}"
+                                                {{ ($filters['course_id'] ?? '') == $c->course_id ? 'selected' : '' }}>
+                                                {{ $c->course_name ?? $c->course_id }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Branch</label>
+                                    <select name="branch_id" class="form-select">
+                                        <option value="">All</option>
+                                        @foreach ($branch as $b)
+                                            <option value="{{ $b->branch_id }}"
+                                                {{ ($filters['branch_id'] ?? '') == $b->branch_id ? 'selected' : '' }}>
+                                                {{ $b->branch_name ?? $b->branch_id }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">z
+                                    <label class="form-label">Batch</label>
+                                    <select name="batch_id" class="form-select">
+                                        <option value="">All</option>
+                                        @foreach ($batch as $b)
+                                            <option value="{{ $b->batch_id }}"
+                                                {{ ($filters['batch_id'] ?? '') == $b->batch_id ? 'selected' : '' }}>
+                                                {{ $b->batch_name ?? $b->batch_id }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Track</label>
+                                    <select name="track" class="form-select">
+                                        <option value="">All</option>
+                                        <option value="Normal"
+                                            {{ ($filters['track'] ?? '') === 'Normal' ? 'selected' : '' }}>Normal
+                                        </option>
+                                        <option value="Fast"
+                                            {{ ($filters['track'] ?? '') === 'Fast' ? 'selected' : '' }}>Fast
+                                        </option>
+                                    </select>
+                                </div>
+
+                                {{-- <div class="col-md-3">
+                                    <label class="form-label">Student (ID/Name/NIC/Phone/Email)</label>
+                                    <input type="text" name="student" class="form-control"
+                                        value="{{ $filters['student'] ?? '' }}" placeholder="Search…">
+                                </div> --}}
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Shared By</label>
+                                    <select name="shared_by" class="form-select"
+                                        {{ auth()->user()->role === 'Sales' ? 'disabled' : '' }}>
+                                        <option value="">All</option>
+                                        @foreach ($sharedByOptions as $u)
+                                            <option value="{{ $u->id }}"
+                                                {{ ($filters['shared_by'] ?? '') == $u->id ? 'selected' : '' }}>
+                                                {{ $u->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if (auth()->user()->role === 'Sales')
+                                        {{-- Sales are locked to themselves; keep a hidden value so it stays applied --}}
+                                        <input type="hidden" name="shared_by" value="{{ auth()->id() }}">
+                                    @endif
+                                </div>
+
+                                <div class="col-md-1 d-grid">
+                                    <button class="btn btn-primary">Apply</button>
+                                </div>
+
+                                <div class="col-md-1 d-grid">
+                                    <a href="{{ url()->current() }}" class="btn btn-link p-0">Clear filters</a>
+                                </div>
+                            </form>
+
+
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card">
@@ -135,7 +223,8 @@
                                                     </thead>
                                                     <tbody>
                                                         @forelse ($data as $row)
-                                                            @if (!empty($row->public_student_id) && !empty($row->batch_no))
+                                                        {{-- !empty($row->public_student_id) && --}}
+                                                            @if ( !empty($row->batch_no))
                                                                 <tr>
                                                                     {{-- you selected s.student_id as public_student_id --}}
                                                                     <td>{{ $row->public_student_id }}</td>
@@ -187,13 +276,13 @@
                                                                     </td>
                                                                 </tr>
                                                             @endif
-                                                            @empty
-                                                                <tr>
-                                                                    <td colspan="10" class="text-center">No records
-                                                                        found.
-                                                                    </td>
-                                                                </tr>
-                                                            @endforelse
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="10" class="text-center">No records
+                                                                    found.
+                                                                </td>
+                                                            </tr>
+                                                        @endforelse
                                                     </tbody>
 
                                                 </table>

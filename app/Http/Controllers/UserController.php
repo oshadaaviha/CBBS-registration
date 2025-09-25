@@ -122,18 +122,78 @@ class UserController extends Controller
         return redirect()->back()->with('message', 'New User Added !');
     }
 
-    public function ChangePasswordView($id)
+    public function changePasswordView($id)
     {
-        return view('user.changePassword')->with('id', $id);
+        // Only allow the logged-in user to change their own password
+        if ((int)$id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Pass $id because your Blade expects it
+        return view('user.changePassword', ['id' => (int)$id]);
     }
+
+    public function changePassword(Request $request)   // <— remove $id param
+    {
+        $request->validate([
+            'cPwd'   => ['required'],
+            'newPwd' => ['required', 'min:6'], // add 'confirmed' if you add a confirm field
+            'id'     => ['required', 'integer'],
+        ]);
+
+        $id = (int) $request->id;
+
+        if ($id !== \Illuminate\Support\Facades\Auth::id()) {
+            abort(403);
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->cPwd, $user->password)) {
+            return back()->with('error', 'Current password is incorrect.');
+        }
+
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->newPwd);
+        $user->save();
+
+        return back()->with('message', 'Password changed successfully!');
+    }
+
     public function ResetPassword(Request $request, $id)
     {
-        $request->validate(['pwd' => 'required|string|min:5']);
+
+        // Only Admins allowed (you can also check session('role') === 'Admin')
+        if (Auth::user()->role !== 'Admin') {
+            abort(403);
+        }
+        $request->validate([
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
         $user = User::findOrFail($id);
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return redirect()->back()->with('message', 'Password reset successfully.');
+    }
+
+    public function adminResetPassword(Request $request, $id)
+    {
+        if (Auth::user()->role !== 'Admin') {
+            abort(403);
+         }
+
+        $request->validate([
+            'pwd' => ['required', 'min:6'] // add 'confirmed' if you add a confirm field
+        ]);
+
+        $user = \App\Models\User::findOrFail((int) $id);
         $user->password = \Illuminate\Support\Facades\Hash::make($request->pwd);
         $user->save();
-        return back()->with('message', 'Password reset successfully.');
+
+        return back()->with('message', 'Password reset successfully for ' . $user->name . '.');
     }
+
     public function DisableUser($id)
     {
         try {
@@ -146,5 +206,10 @@ class UserController extends Controller
             app(ErrorLogController::class)->ShowError($e);
             return redirect()->back()->with('error', 'Something went wrong. Please try again');
         }
+    }
+    public function EditProfileView($id)
+    {
+        $data = User::findOrFail($id);
+        return view('user.editprofile', compact('data'));
     }
 }
